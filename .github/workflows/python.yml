@@ -32,7 +32,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          pyinstaller --noconfirm --windowed --clean --onefile --icon "YOSEFTT/-/.github/workflows/images/A.ico" --version-file "YOSEFTT/-/.github/workflows/information/version_info.txt" עריכת ספרי דיקטה.py
+          pyinstaller --noconfirm --windowed --clean --onefile --icon "YOSEFTT/-/.github/workflows/images/A.ico" --version-file "YOSEFTT/-/.github/workflows/information/version_info.txt" AAA.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
