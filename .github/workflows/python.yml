@@ -3,7 +3,7 @@ name: Build EXE
 on:
   push:
     branches:
-      - main  # או כל ענף אחר שתרצה
+      - main
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10.6  # גרסת Python שלך
+          python-version: 3.10.6
 
       - name: Install dependencies
         run: |
@@ -30,12 +30,21 @@ jobs:
           pip install PyQt5
           pip install pyluach
 
-      - name: Build EXE
-        run: |
-          pyinstaller --noconfirm --windowed --clean --onefile AAA.py
+      - name: Set Version Number
+        id: vset_version
+        run: echo "version=1.0.$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Build EXE with Icon and Version
+        run: |
+          pyinstaller --noconfirm --windowed --clean --onefile AAA.py \
+          --icon=resources/icon.ico \
+          --version-file=resources/version_info.txt
+
+      - name: Create Release
+        uses: actions/create-release@v1
         with:
-          name: exe-file
-          path: dist/EditingDictaBooks.exe
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: dist/EditingDictaBooks.exe
