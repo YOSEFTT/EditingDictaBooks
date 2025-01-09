@@ -32,7 +32,10 @@ jobs:
 
       - name: Set Version Number
         run: echo "VERSION=1.0.0" >> $GITHUB_ENV
-        
+
+      - name: Debug Version
+        run: echo "Version is ${{ env.VERSION }}"
+
       - name: Build EXE with Icon and Version
         run: |
           cmd /c "pyinstaller --noconfirm --windowed --clean --onefile AAA.py --icon=resources/icon.ico --version-file=resources/version_info.txt"
