@@ -38,4 +38,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: exe-file
-          path: dist/AAA.exe
+          path: dist/עריכת ספר דיקה.exe
