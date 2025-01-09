@@ -42,7 +42,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v4
+        uses: actions/create-release@v1
         with:
           tag_name: "v${{ env.VERSION }}"
           release_name: "Release v${{ env.VERSION }}"
@@ -52,7 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v4
+        uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dist/EditingDictaBooks.exe
