@@ -11,12 +11,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10  # גרסת Python שלך
+          python-version: 3.10.6  # גרסת Python שלך
 
       - name: Install dependencies
         run: |
@@ -35,7 +35,7 @@ jobs:
           pyinstaller --noconfirm --windowed --clean --onefile AAA.py
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: exe-file
-          path: dist/עריכת ספר דיקה.exe
+          path: dist/EditingDictaBooks.exe
