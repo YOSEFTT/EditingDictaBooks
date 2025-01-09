@@ -19,12 +19,12 @@ VSVersionInfo(
           StringStruct(u'CompanyName', u'אוצריא'),  # שם החברה שמפתחת את התוכנה
           StringStruct(u'FileDescription', u"יצירת כותרות לספרי טקסט, עבור תוכנת 'אוצריא'"),  #  תיאור הקובץ, בדרך כלל משמש להסביר מה הוא עושה
           StringStruct(u'Comments', u'יוצר כותרות בפורמט המתאים לתוכנת אוצריא. שימוש קל ונוח'),  # הסבר נוסף (לא מופיע בווינדוס במאפיינים)
-          StringStruct(u'FileVersion', u'${{ steps.set_version.outputs.version }}'),  # [גרסה דינמית]  גרסת הקובץ, כפי שתוצג למשתמש
+          StringStruct(u'FileVersion', u'3.0.0.0'),  # [גרסה דינמית]  גרסת הקובץ, כפי שתוצג למשתמש
           StringStruct(u'InternalName', u'AAA'),  # השם הפנימי של הקובץ, שיכול להיות שונה משם הקובץ בפועל
           StringStruct(u'OriginalFilename', u'EditingDictaBooks.exe'),  # שם הקובץ המקורי, לפני שינוי שמות
           StringStruct(u'ProductName', u'עריכת ספרי דיקטה'),  # שם המוצר הכולל שאליו הקובץ שייך 
           StringStruct(u'LegalCopyright', u'מתנדבי אוצריא. השימוש וההעתקה חופשיים!'),  # זכויות יוצרים
-          StringStruct(u'ProductVersion', u'${{ steps.set_version.outputs.version }}')  # [גרסת מוצר דינמית] גרסת המוצר הכולל 
+          StringStruct(u'ProductVersion', u'3.0.0.0')  # [גרסת מוצר דינמית] גרסת המוצר הכולל 
         ]
       )
       ]
