@@ -31,7 +31,6 @@ jobs:
           pip install pyluach
 
       - name: Set Version Number
-        id: vset_version
         run: echo "VERSION=1.0.0" >> $GITHUB_ENV
         
       - name: Build EXE with Icon and Version
@@ -42,8 +41,8 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
+          tag_name: "v${{ env.VERSION }}"
+          release_name: "Release v${{ env.VERSION }}"
           draft: false
           prerelease: false
         env:
