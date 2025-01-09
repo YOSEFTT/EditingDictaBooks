@@ -36,13 +36,21 @@ jobs:
 
       - name: Build EXE with Icon and Version
         run: |
-          cmd /c "pyinstaller --noconfirm --windowed --clean --onefile AAA.py --icon=resources/icon.ico --version-file=resources/version_info.txt"
+          cmd /c "pyinstaller --noconfirm --windowed --clean --onefile AAA.py --icon=resources/icon.ico --version-file=resources/version_info.txt --name='עריכת ספרי דיקטה'"
 
       - name: Create Release
+        id: create_release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.VERSION }}
           release_name: Release ${{ env.VERSION }}
           draft: false
           prerelease: false
-          files: dist/EditingDictaBooks.exe
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/עריכת ספרי דיקטה.exe
+          asset_name: עריכת ספרי דיקטה.exe
+          asset_content_type: application/octet-stream
