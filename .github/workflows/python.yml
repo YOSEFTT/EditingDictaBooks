@@ -4,7 +4,9 @@ on:
   push:
     branches:
       - main
-
+permissions:
+  contents: write
+  
 jobs:
   build:
     runs-on: windows-latest
@@ -39,7 +41,9 @@ jobs:
         run: |
           echo "VERSION=${{ env.VERSION }}"
           echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}"
-
+          
+      - name: Print Version
+        run: echo "VERSION=${{ env.VERSION }}"
 
       - name: Build EXE with Icon and Version
         run: |
