@@ -36,9 +36,7 @@ jobs:
 
       - name: Build EXE with Icon and Version
         run: |
-          pyinstaller --noconfirm --windowed --clean --onefile AAA.py \
-          --icon=resources/icon.ico \
-          --version-file=resources/version_info.txt
+          cmd /c "pyinstaller --noconfirm --windowed --clean --onefile AAA.py --icon=resources/icon.ico --version-file=resources/version_info.txt"
 
       - name: Create Release
         uses: actions/create-release@v1
