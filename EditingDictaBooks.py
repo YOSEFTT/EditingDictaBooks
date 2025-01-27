@@ -1,13 +1,14 @@
-﻿import sys
+from logging import info
+import sys
 import ctypes
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QVBoxLayout, QLabel,
     QFileDialog, QLineEdit, QMessageBox, QComboBox, QHBoxLayout,
-    QCheckBox, QTextEdit, QRadioButton, QButtonGroup
+    QCheckBox, QTextEdit, QDialog, QFrame, QSplitter, QGridLayout
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QCursor
 from PyQt5.QtWinExtras import QtWin
 from pyluach import gematria
 from bs4 import BeautifulSoup
@@ -141,7 +142,7 @@ class CreateHeadersOtZria(QWidget):
         remove = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’"]
         aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יה", "יו", "קיה", "קיו", "ריה", "ריו", "שיה", "שיו", "תיה", "תיו", "תקיה", "תקיו", "תריה", "תריו", "תשיה", "תשיו", "תתיה", "תתיו", "תתקיה", "תתקיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
-        cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "דש", "חי", "טל", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערב", "ערה"]
+        cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "יוד", "למד", "נון", "דש", "חי", "טל", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערב", "ערה"]
         append_list = []
         for i in aa:
             for ot_sofit in bb:
@@ -216,7 +217,7 @@ class CreateHeadersOtZria(QWidget):
                     (f"<div style='text-align: center;'>נוצרו {count_headings} כותרות</div>", 15, "bold"),
                     ("<div style='text-align: center;'>כעת פתח את הספר בתוכנת 'אוצריא', והשינויים ישתקפו ב'ניווט' שבתפריט הצידי.</div>", 11),
                     ("<div style='text-align: center;'>אם ישנם טעויות או תיקונים, פתח את הספר בעורך טקסט, כגון פנקס רשימות, וורד, ++notepad או vs code, ותקן את הדרוש תיקון</div>", 11),
-                    ("<div style='text-align: center;'>שים לב! אם הספר כבר פתוח בתוכנה, יש לסגור אותו ולפתוח שוב, אך אין צורך להפעיל את תוכנת 'אוצריא' מחדש</div>", 9),
+                    ("<div style='text-align: center;'>שים לב! אם הספר כבר פתוח ב'אוצריא', יש לסגור אותו ולפתוח אותו שוב, אך אין צורך להפעיל את התוכנה מחדש</div>", 9),
                 ]
                 self.show_custom_message("!מזל טוב", detailed_message, "560x310")
             else:
@@ -383,7 +384,7 @@ class CreateSingleLetterHeaders(QWidget):
         remove = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’"]
         aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יו", "קיה", "קיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
-        cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "חי", "טל", "דש", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערה", "ערב"]
+        cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "חי", "יוד", "למד", "נון", "טל", "דש", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערה", "ערב"]
         append_list = []
         for i in aa:
             for ot_sofit in bb:
@@ -791,7 +792,7 @@ class EmphasizeAndPunctuate(QWidget):
                     # הדגשת המילה הראשונה אם אין סימנים מיוחדים
                     if emphasize_start:
                         first_word = words[0]
-                        if not any(tag in first_word for tag in ['<b>', '<small>', '<big>', '<h2>', '<h3>', '<h4>', '<h5>', '<h6>', '<h7>', '<h8>', '<h9>']):
+                        if not any(tag in first_word for tag in ['<b>', '<small>', '<big>', '<h2>', '<h3>', '<h4>', '<h5>', '<h6>']):
                             if not (first_word.startswith('<') and first_word.endswith('>')):
                                 lines[i] = '<b>' + first_word + '</b> ' + ' '.join(words[1:]) + '\n'
                                 changed = True
@@ -1146,28 +1147,31 @@ class ReplacePageBHeaders(QWidget):
 # ==========================================
 # Script 8: בדיקת שגיאות בכותרות
 # ==========================================
-class CheckHeadingErrorsOriginal(QWidget):
-    def __init__(self):
-        super().__init__()
+
+# ------------------ מחלקה ראשונה: בדיקת שגיאות בכותרות ------------------ #
+class בדיקת_שגיאות_בכותרות(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setWindowTitle("בדיקת שגיאות בכותרות")
-        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout()
 
         # תווים בתחילת וסוף הכותרת
-        re_start_layout = QHBoxLayout()
+        regex_layout = QHBoxLayout()
         re_start_label = QLabel("תו/ים בתחילת הכותרת:")
         re_start_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.re_start_entry = QLineEdit()
         self.re_start_entry.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        re_end_layout = QHBoxLayout()
+
         re_end_label = QLabel("תו/ים בסוף הכותרת:")
+
         self.re_end_entry = QLineEdit()
+        self.re_end_entry.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.gershayim_var = QCheckBox("כולל גרשיים")
 
-        regex_layout = QHBoxLayout()
+        # הוספת הרכיבים
         regex_layout.addWidget(self.gershayim_var)
         regex_layout.addWidget(self.re_end_entry)
         regex_layout.addWidget(re_end_label)
@@ -1175,48 +1179,54 @@ class CheckHeadingErrorsOriginal(QWidget):
         regex_layout.addWidget(re_start_label)
         layout.addLayout(regex_layout)
 
-        # כפתור בחירת קובץ
-        browse_button = QPushButton("בחר קובץ")
-        browse_button.clicked.connect(self.open_file)
-        browse_button.setFixedHeight(50)
-        browse_button.setStyleSheet("font-size: 25px;")
-        layout.addWidget(browse_button)
-
-        # תוצאות
-        unmatched_regex_label = QLabel("כותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\nאם יש רווח לפני או אחרי הכותרת, זה גם יוצג כשגיאה")
-        unmatched_regex_label.setStyleSheet("font-size: 20px;")
+        # כותרת לאזור התוצאות
+        unmatched_regex_label = QLabel(
+            "פירוט הכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\n"
+            "אם יש רווח לפני או אחרי הכותרת, זה גם יוצג כשגיאה"
+        )
+        unmatched_regex_label.setStyleSheet("font-size: 18px;")
         layout.addWidget(unmatched_regex_label)
+
         self.unmatched_regex_text = QTextEdit()
-        self.unmatched_regex_text.setFixedHeight(200)
+        self.unmatched_regex_text.setFixedHeight(220)
         self.unmatched_regex_text.setReadOnly(True)
         layout.addWidget(self.unmatched_regex_text)
 
         unmatched_tags_label = QLabel("פירוט הכותרות שאינן לפי הסדר")
-        unmatched_tags_label.setStyleSheet("font-size: 20px;")
+        unmatched_tags_label.setStyleSheet("font-size: 18px;")
         layout.addWidget(unmatched_tags_label)
+
         self.unmatched_tags_text = QTextEdit()
-        self.unmatched_tags_text.setFixedHeight(300)
+        self.unmatched_tags_text.setFixedHeight(250)
         self.unmatched_tags_text.setReadOnly(True)
         layout.addWidget(self.unmatched_tags_text)
 
         self.setLayout(layout)
 
-    def open_file(self):
-        options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "בחר קובץ טקסט", "", "קבצי טקסט (*.txt)", options=options
-        )
-        if file_path:
+    def load_file_and_process(self, file_path):
+        """
+        פונקציה זו תחליף את open_file, כך שנקבל ישירות את הנתיב מבחוץ
+        ונעבד את תוכן הקובץ בהתאם.
+        """
+        try:
             with open(file_path, "r", encoding="utf-8") as file:
                 html_content = file.read()
-            re_start = self.re_start_entry.text()
-            re_end = self.re_end_entry.text()
-            gershayim = self.gershayim_var.isChecked()
-            unmatched_regex, unmatched_tags = self.process_html(html_content, re_start, re_end, gershayim)
-            self.unmatched_regex_text.setPlainText("\n".join(unmatched_regex))
-            self.unmatched_tags_text.setPlainText("\n".join(unmatched_tags))
+        except Exception as e:
+            self.unmatched_regex_text.setPlainText(f"שגיאה בפתיחת קובץ: {e}")
+            return
+
+        re_start = self.re_start_entry.text()
+        re_end = self.re_end_entry.text()
+        gershayim = self.gershayim_var.isChecked()
+
+        unmatched_regex, unmatched_tags = self.process_html(html_content, re_start, re_end, gershayim)
+        self.unmatched_regex_text.setPlainText("\n".join(unmatched_regex))
+        self.unmatched_tags_text.setPlainText("\n".join(unmatched_tags))
 
     def process_html(self, html_content, re_start, re_end, gershayim):
+        """
+        לוגיקת העיבוד המקורית. כמו בסקריפט הראשוני, רק בלי הדיאלוגים של בחירת קובץ.
+        """
         soup = BeautifulSoup(html_content, 'html.parser')
 
         # קומפילציה של תבנית Regex לפי קלט המשתמש
@@ -1232,13 +1242,13 @@ class CheckHeadingErrorsOriginal(QWidget):
         unmatched_regex = []
         unmatched_tags = []
 
-        # מעבר על תגי כותרות מ-h2 עד h6
+        # נעבור על תגי כותרות h2 עד h6
         for i in range(2, 7):
             tags = soup.find_all(f"h{i}")
 
             # בדיקה אם נמצאו תגים
             if not tags:
-                unmatched_tags.append(f"אין בקובץ כותרות ברמה {i}")
+                unmatched_tags.append(f"מידע: אין בקובץ כותרות ברמה {i}")
                 continue
 
             # עיבוד כל התגים למעט האחרון
@@ -1308,6 +1318,174 @@ class CheckHeadingErrorsOriginal(QWidget):
 
         return unmatched_regex, unmatched_tags
 
+# ------------------ מחלקה שנייה: בדיקת שגיאות בעיצוב (תגים וכו') ------------------ #
+class בדיקת_שגיאות_בתגים(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+    def init_ui(self):
+        main_layout = QVBoxLayout()
+
+        # כפתור היה בסקריפט המקורי - כאן לא נצטרך, כי אנחנו טוענים קובץ מלמעלה
+        # נשאיר רק את אזורי התוצאות.
+
+        self.opening_label = QLabel("תגים פותחים ללא תגים סוגרים")
+        self.opening_label.setStyleSheet("font-size: 18px;")
+        main_layout.addWidget(self.opening_label)
+        self.opening_without_closing = QTextEdit()
+        self.opening_without_closing.setReadOnly(True)
+        main_layout.addWidget(self.opening_without_closing)
+
+        self.closing_label = QLabel("תגים סוגרים ללא תגים פותחים")
+        self.closing_label.setStyleSheet("font-size: 18px;")
+        main_layout.addWidget(self.closing_label)
+        self.closing_without_opening = QTextEdit()
+        self.closing_without_opening.setReadOnly(True)
+        main_layout.addWidget(self.closing_without_opening)
+
+        self.heading_label = QLabel("טקסט שאינו חלק מכותרת, שנמצא באותה שורה עם הכותרת")
+        self.heading_label.setStyleSheet("font-size: 18px;")
+        main_layout.addWidget(self.heading_label)
+        self.heading_errors = QTextEdit()
+        self.heading_errors.setReadOnly(True)
+        main_layout.addWidget(self.heading_errors)
+
+        self.setLayout(main_layout)
+        self.setWindowTitle("בודק שגיאות בעיצוב")
+
+    def load_file_and_check(self, file_path):
+        """
+        פונקציה זו תחליף את select_file מהסקריפט המקורי.
+        תקבל נתיב קובץ ותבצע את כל הבדיקות.
+        """
+        # ניקוי תוצאות קודמות
+        self.opening_without_closing.clear()
+        self.closing_without_opening.clear()
+        self.heading_errors.clear()
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                lines = file.readlines()
+        except Exception as e:
+            self.opening_without_closing.setPlainText(f"שגיאה בפתיחת קובץ: {e}")
+            return
+
+        open_tags = ["b", "big", "i", "small", "h2", "h3", "h4", "h5", "h6"]
+        opening_without_closing_list = []
+        closing_without_opening_list = []
+        heading_errors_list = []
+
+        for line_number, line in enumerate(lines, start=1):
+            # מציאת כל התגים הפותחים והסוגרים
+            tags_in_line = re.findall(r'<(/?\w+)>', line)
+            stack = []
+
+            for tag in tags_in_line:
+                if not tag.startswith('/'):  # תג פותח
+                    stack.append(tag)
+                else:  # תג סוגר
+                    if stack and stack[-1] == tag[1:]:  # תג תואם במחסנית
+                        stack.pop()
+                    else:  # תג סוגר בלי פתיחה תואמת
+                        closing_without_opening_list.append(
+                            f"שורה {line_number}: </{tag[1:]}> || {line.strip()}"
+                        )
+
+            # לאחר מעבר על כל התגים בשורה, כל מה שנשאר במחסנית הוא תגים פותחים ללא סגירה
+            for unclosed_tag in stack:
+                opening_without_closing_list.append(
+                    f"שורה {line_number}: <{unclosed_tag}> || {line.strip()}"
+                )
+
+            # בדיקה לכותרת המכילה טקסט נוסף
+            for tag in ["h2", "h3", "h4", "h5", "h6"]:
+                heading_pattern = rf'<{tag}>.*?</{tag}>'
+                heading_match = re.search(heading_pattern, line)
+                if heading_match:
+                    start, end = heading_match.span()
+                    before = line[:start].strip()
+                    after = line[end:].strip()
+                    if before or after:
+                        heading_errors_list.append(f"שורה {line_number}: {line.strip()}")
+
+        # הצגת תוצאות
+        if opening_without_closing_list:
+            self.opening_without_closing.setPlainText("\n".join(opening_without_closing_list))
+        else:
+            self.opening_without_closing.setPlainText("לא נמצאו שגיאות")
+
+        if closing_without_opening_list:
+            self.closing_without_opening.setPlainText("\n".join(closing_without_opening_list))
+        else:
+            self.closing_without_opening.setPlainText("לא נמצאו שגיאות")
+
+        if heading_errors_list:
+            self.heading_errors.setPlainText("\n".join(heading_errors_list))
+        else:
+            self.heading_errors.setPlainText("לא נמצאו שגיאות")
+
+# ------------------ חלון משולב שמאחד את שתי המחלקות ------------------ #
+class CheckHeadingErrorsOriginal(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("בדיקת שגיאות בכותרות ובתגי העיצוב")
+        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+
+        # שני ה־Widgets שלנו
+        self.check_headings_widget = בדיקת_שגיאות_בכותרות()
+        self.html_tag_checker_widget = בדיקת_שגיאות_בתגים()
+
+        # תיבות למעלה: נתיב קובץ וכפתור Browse
+        top_layout = QHBoxLayout()
+        self.file_path_label = QLabel("נתיב קובץ:")
+        self.file_path_label.setStyleSheet("font-size: 18px;")
+        self.file_path_edit = QLineEdit()
+        self.file_path_edit.setReadOnly(True)
+
+        self.browse_button = QPushButton("בחר קובץ")
+        self.browse_button.setStyleSheet("font-size: 18px;")
+        self.browse_button.setFixedHeight(40)
+        self.browse_button.setFixedWidth(280)
+        self.browse_button.clicked.connect(self.browse_file)
+
+        top_layout.addWidget(self.browse_button)
+        top_layout.addWidget(self.file_path_edit)
+        top_layout.addWidget(self.file_path_label)
+
+        # הפרדה אופקית (splitter) בין שני הרכיבים
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(self.html_tag_checker_widget)
+
+        # פס אנכי באמצע
+        line = QFrame()
+        line.setFrameShape(QFrame.VLine)
+        line.setFrameShadow(QFrame.Sunken)
+        splitter.addWidget(line)
+
+        splitter.addWidget(self.check_headings_widget)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(2, 1)
+
+        # בניית ה־layout הכללי
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(top_layout)
+        main_layout.addWidget(splitter)
+
+        self.setLayout(main_layout)
+        self.resize(1200, 700)  # גודל התחלתי
+
+    def browse_file(self):
+        """
+        בוחרים קובץ, שמים את הנתיב ב-QLineEdit ומריצים את שתי הבדיקות.
+        """
+        file_path, _ = QFileDialog.getOpenFileName(self, "בחר קובץ", "", "קבצי טקסט (*.txt);;כל הקבצים (*)")
+        if file_path:
+            self.file_path_edit.setText(file_path)
+            # מפעילים את הבדיקות בשני ה־ widgets
+            self.check_headings_widget.load_file_and_process(file_path)
+            self.html_tag_checker_widget.load_file_and_check(file_path)
+
     # פונקציה לטעינת אייקון ממחרוזת Base64
     def load_icon_from_base64(self, base64_string):
         pixmap = QPixmap()
@@ -1317,25 +1495,32 @@ class CheckHeadingErrorsOriginal(QWidget):
 # ==========================================
 # Script 9: בדיקת שגיאות בכותרות מותאם לספרים על השס
 # ==========================================
-class CheckHeadingErrorsCustom(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("בדיקת שגיאות בכותרות מותאם לספרים על השס")
-        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+
+# ------------------ מחלקה ראשונה: בדיקת שגיאות בכותרות ------------------ #
+class בדיקת_שגיאות_בכותרות_לשס(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("בדיקת שגיאות בכותרות")
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout()
 
         # תווים בתחילת וסוף הכותרת
+        regex_layout = QHBoxLayout()
         re_start_label = QLabel("תו/ים בתחילת הכותרת:")
+        re_start_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.re_start_entry = QLineEdit()
+        self.re_start_entry.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+
         re_end_label = QLabel("תו/ים בסוף הכותרת:")
+
         self.re_end_entry = QLineEdit()
+        self.re_end_entry.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.re_end_entry.setText('. :')
         self.gershayim_var = QCheckBox("כולל גרשיים")
-    
-        regex_layout = QHBoxLayout()
+
+        # הוספת הרכיבים
         regex_layout.addWidget(self.gershayim_var)
         regex_layout.addWidget(self.re_end_entry)
         regex_layout.addWidget(re_end_label)
@@ -1343,48 +1528,54 @@ class CheckHeadingErrorsCustom(QWidget):
         regex_layout.addWidget(re_start_label)
         layout.addLayout(regex_layout)
 
-        # כפתור בחירת קובץ
-        browse_button = QPushButton("בחר קובץ")
-        browse_button.clicked.connect(self.open_file)
-        browse_button.setFixedHeight(50)
-        browse_button.setStyleSheet("font-size: 25px;")
-        layout.addWidget(browse_button)
-
-        # תוצאות
-        unmatched_regex_label = QLabel("כותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\nאם יש רווח לפני או אחרי הכותרת, זה גם יוצג כשגיאה")
-        unmatched_regex_label.setStyleSheet("font-size: 20px;")
+        # כותרת לאזור התוצאות
+        unmatched_regex_label = QLabel(
+            "פירוט הכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\n"
+            "אם יש רווח לפני או אחרי הכותרת, זה גם יוצג כשגיאה"
+        )
+        unmatched_regex_label.setStyleSheet("font-size: 18px;")
         layout.addWidget(unmatched_regex_label)
+
         self.unmatched_regex_text = QTextEdit()
-        self.unmatched_regex_text.setFixedHeight(200)
+        self.unmatched_regex_text.setFixedHeight(220)
         self.unmatched_regex_text.setReadOnly(True)
         layout.addWidget(self.unmatched_regex_text)
 
-        unmatched_tags_label = QLabel("פירוט הכותרות שאינן לפי הסדר\nהתוכנה מדלגת בבדיקה בכל פעם על כותרת אחת, בגלל הכותרות הכפולות לעמוד ב")
-        unmatched_tags_label.setStyleSheet("font-size: 20px;")
+        unmatched_tags_label = QLabel("פירוט הכותרות שאינן לפי הסדר")
+        unmatched_tags_label.setStyleSheet("font-size: 18px;")
         layout.addWidget(unmatched_tags_label)
+
         self.unmatched_tags_text = QTextEdit()
-        self.unmatched_tags_text.setFixedHeight(300)
+        self.unmatched_tags_text.setFixedHeight(250)
         self.unmatched_tags_text.setReadOnly(True)
         layout.addWidget(self.unmatched_tags_text)
 
         self.setLayout(layout)
 
-    def open_file(self):
-        options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "בחר קובץ טקסט", "", "קבצי טקסט (*.txt)", options=options
-        )
-        if file_path:
+    def load_file_and_process(self, file_path):
+        """
+        פונקציה זו תחליף את open_file, כך שנקבל ישירות את הנתיב מבחוץ
+        ונעבד את תוכן הקובץ בהתאם.
+        """
+        try:
             with open(file_path, "r", encoding="utf-8") as file:
                 html_content = file.read()
-            re_start = self.re_start_entry.text()
-            re_end = self.re_end_entry.text()
-            gershayim = self.gershayim_var.isChecked()
-            unmatched_regex, unmatched_tags = self.process_html(html_content, re_start, re_end, gershayim)
-            self.unmatched_regex_text.setPlainText("\n".join(unmatched_regex))
-            self.unmatched_tags_text.setPlainText("\n".join(unmatched_tags))
+        except Exception as e:
+            self.unmatched_regex_text.setPlainText(f"שגיאה בפתיחת קובץ: {e}")
+            return
+
+        re_start = self.re_start_entry.text()
+        re_end = self.re_end_entry.text()
+        gershayim = self.gershayim_var.isChecked()
+
+        unmatched_regex, unmatched_tags = self.process_html(html_content, re_start, re_end, gershayim)
+        self.unmatched_regex_text.setPlainText("\n".join(unmatched_regex))
+        self.unmatched_tags_text.setPlainText("\n".join(unmatched_tags))
 
     def process_html(self, html_content, re_start, re_end, gershayim):
+        """
+        לוגיקת העיבוד המקורית. כמו בסקריפט הראשוני, רק בלי הדיאלוגים של בחירת קובץ.
+        """
         soup = BeautifulSoup(html_content, 'html.parser')
 
         # קומפילציה של תבנית Regex לפי קלט המשתמש
@@ -1400,13 +1591,13 @@ class CheckHeadingErrorsCustom(QWidget):
         unmatched_regex = []
         unmatched_tags = []
 
-        # מעבר על תגי כותרות מ-h2 עד h6
+        # נעבור על תגי כותרות h2 עד h6
         for i in range(2, 7):
             tags = soup.find_all(f"h{i}")
 
             # בדיקה אם נמצאו תגים
             if not tags:
-                unmatched_tags.append(f"אין בקובץ כותרות ברמה {i}")
+                unmatched_tags.append(f"מידע: אין בקובץ כותרות ברמה {i}")
                 continue
 
             # עיבוד כל התגים למעט האחרון
@@ -1477,6 +1668,174 @@ class CheckHeadingErrorsCustom(QWidget):
 
         return unmatched_regex, unmatched_tags
 
+# ------------------ מחלקה שנייה: בדיקת שגיאות בעיצוב (תגים וכו') ------------------ #
+class בדיקת_שגיאות_בתגים_לשס(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+
+    def init_ui(self):
+        main_layout = QVBoxLayout()
+
+        # כפתור היה בסקריפט המקורי - כאן לא נצטרך, כי אנחנו טוענים קובץ מלמעלה
+        # נשאיר רק את אזורי התוצאות.
+
+        self.opening_label = QLabel("תגים פותחים ללא תגים סוגרים")
+        self.opening_label.setStyleSheet("font-size: 18px;")
+        main_layout.addWidget(self.opening_label)
+        self.opening_without_closing = QTextEdit()
+        self.opening_without_closing.setReadOnly(True)
+        main_layout.addWidget(self.opening_without_closing)
+
+        self.closing_label = QLabel("תגים סוגרים ללא תגים פותחים")
+        self.closing_label.setStyleSheet("font-size: 18px;")
+        main_layout.addWidget(self.closing_label)
+        self.closing_without_opening = QTextEdit()
+        self.closing_without_opening.setReadOnly(True)
+        main_layout.addWidget(self.closing_without_opening)
+
+        self.heading_label = QLabel("טקסט שאינו חלק מכותרת, שנמצא באותה שורה עם הכותרת")
+        self.heading_label.setStyleSheet("font-size: 18px;")
+        main_layout.addWidget(self.heading_label)
+        self.heading_errors = QTextEdit()
+        self.heading_errors.setReadOnly(True)
+        main_layout.addWidget(self.heading_errors)
+
+        self.setLayout(main_layout)
+        self.setWindowTitle("בודק שגיאות בעיצוב")
+
+    def load_file_and_check(self, file_path):
+        """
+        פונקציה זו תחליף את select_file מהסקריפט המקורי.
+        תקבל נתיב קובץ ותבצע את כל הבדיקות.
+        """
+        # ניקוי תוצאות קודמות
+        self.opening_without_closing.clear()
+        self.closing_without_opening.clear()
+        self.heading_errors.clear()
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                lines = file.readlines()
+        except Exception as e:
+            self.opening_without_closing.setPlainText(f"שגיאה בפתיחת קובץ: {e}")
+            return
+
+        open_tags = ["b", "big", "i", "small", "h2", "h3", "h4", "h5", "h6"]
+        opening_without_closing_list = []
+        closing_without_opening_list = []
+        heading_errors_list = []
+
+        for line_number, line in enumerate(lines, start=1):
+            # מציאת כל התגים הפותחים והסוגרים
+            tags_in_line = re.findall(r'<(/?\w+)>', line)
+            stack = []
+
+            for tag in tags_in_line:
+                if not tag.startswith('/'):  # תג פותח
+                    stack.append(tag)
+                else:  # תג סוגר
+                    if stack and stack[-1] == tag[1:]:  # תג תואם במחסנית
+                        stack.pop()
+                    else:  # תג סוגר בלי פתיחה תואמת
+                        closing_without_opening_list.append(
+                            f"שורה {line_number}: </{tag[1:]}> || {line.strip()}"
+                        )
+
+            # לאחר מעבר על כל התגים בשורה, כל מה שנשאר במחסנית הוא תגים פותחים ללא סגירה
+            for unclosed_tag in stack:
+                opening_without_closing_list.append(
+                    f"שורה {line_number}: <{unclosed_tag}> || {line.strip()}"
+                )
+
+            # בדיקה לכותרת המכילה טקסט נוסף
+            for tag in ["h2", "h3", "h4", "h5", "h6"]:
+                heading_pattern = rf'<{tag}>.*?</{tag}>'
+                heading_match = re.search(heading_pattern, line)
+                if heading_match:
+                    start, end = heading_match.span()
+                    before = line[:start].strip()
+                    after = line[end:].strip()
+                    if before or after:
+                        heading_errors_list.append(f"שורה {line_number}: {line.strip()}")
+
+        # הצגת תוצאות
+        if opening_without_closing_list:
+            self.opening_without_closing.setPlainText("\n".join(opening_without_closing_list))
+        else:
+            self.opening_without_closing.setPlainText("לא נמצאו שגיאות")
+
+        if closing_without_opening_list:
+            self.closing_without_opening.setPlainText("\n".join(closing_without_opening_list))
+        else:
+            self.closing_without_opening.setPlainText("לא נמצאו שגיאות")
+
+        if heading_errors_list:
+            self.heading_errors.setPlainText("\n".join(heading_errors_list))
+        else:
+            self.heading_errors.setPlainText("לא נמצאו שגיאות")
+
+# ------------------ חלון משולב שמאחד את שתי המחלקות ------------------ #
+class CheckHeadingErrorsCustom(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("בדיקת שגיאות בכותרות ובתגי העיצוב לספרים על השס")
+        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+
+        # שני ה־Widgets שלנו
+        self.check_headings_widget = בדיקת_שגיאות_בכותרות_לשס()
+        self.html_tag_checker_widget = בדיקת_שגיאות_בתגים_לשס()
+
+        # תיבות למעלה: נתיב קובץ וכפתור Browse
+        top_layout = QHBoxLayout()
+        self.file_path_label = QLabel("נתיב קובץ:")
+        self.file_path_label.setStyleSheet("font-size: 18px;")
+        self.file_path_edit = QLineEdit()
+        self.file_path_edit.setReadOnly(True)
+
+        self.browse_button = QPushButton("בחר קובץ")
+        self.browse_button.setStyleSheet("font-size: 18px;")
+        self.browse_button.setFixedHeight(40)
+        self.browse_button.setFixedWidth(280)
+        self.browse_button.clicked.connect(self.browse_file)
+
+        top_layout.addWidget(self.browse_button)
+        top_layout.addWidget(self.file_path_edit)
+        top_layout.addWidget(self.file_path_label)
+
+        # הפרדה אופקית (splitter) בין שני הרכיבים
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(self.html_tag_checker_widget)
+
+        # פס אנכי באמצע
+        line = QFrame()
+        line.setFrameShape(QFrame.VLine)
+        line.setFrameShadow(QFrame.Sunken)
+        splitter.addWidget(line)
+
+        splitter.addWidget(self.check_headings_widget)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(2, 1)
+
+        # בניית ה־layout הכללי
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(top_layout)
+        main_layout.addWidget(splitter)
+
+        self.setLayout(main_layout)
+        self.resize(1200, 700)  # גודל התחלתי
+
+    def browse_file(self):
+        """
+        בוחרים קובץ, שמים את הנתיב ב-QLineEdit ומריצים את שתי הבדיקות.
+        """
+        file_path, _ = QFileDialog.getOpenFileName(self, "בחר קובץ", "", "קבצי טקסט (*.txt);;כל הקבצים (*)")
+        if file_path:
+            self.file_path_edit.setText(file_path)
+            # מפעילים את הבדיקות בשני ה־ widgets
+            self.check_headings_widget.load_file_and_process(file_path)
+            self.html_tag_checker_widget.load_file_and_check(file_path)
+
     # פונקציה לטעינת אייקון ממחרוזת Base64
     def load_icon_from_base64(self, base64_string):
         pixmap = QPixmap()
@@ -1484,7 +1843,7 @@ class CheckHeadingErrorsCustom(QWidget):
         return QIcon(pixmap)
 
 # ==========================================
-# Script 10: המרת תמונה לטקסט
+# Script 11: המרת תמונה לטקסט
 # ==========================================
 class ImageToHtmlApp(QtWidgets.QWidget):
     def __init__(self):
@@ -1706,7 +2065,7 @@ class ImageToHtmlApp(QtWidgets.QWidget):
         return QIcon(pixmap)
 
 # ==========================================
-# Script 11: נקודותיים ורווח
+# Script 12: נקודותיים ורווח
 # ==========================================
 class ReplaceColonsAndSpaces(QWidget):
     def __init__(self):
@@ -1718,6 +2077,11 @@ class ReplaceColonsAndSpaces(QWidget):
 
     def init_ui(self):
         layout = QVBoxLayout()
+
+        label = QLabel("תוכנה זו מחליפה את התווים - נקודותיים ורווח, בנקודותיים ואנטר\nתוכנה זו כבר לא אקטואלית למי שמשתמש בגירסה 4.4 ואילך של ספרי דיקטה")
+        label.setAlignment(Qt.AlignCenter)
+        label.setStyleSheet("font-size: 20px;")
+        layout.addWidget(label)
 
         # נתיב קובץ
         file_layout = QHBoxLayout()
@@ -1790,7 +2154,6 @@ class MainMenu(QWidget):
         # הגדרת החלון
         self.setWindowTitle("עריכת ספרי דיקטה עבור אוצריא")
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
-        self.setGeometry(100, 100, 600, 650)
         self.init_ui()
 
         # הגדרת האייקון לשורת המשימות
@@ -1805,29 +2168,80 @@ class MainMenu(QWidget):
         label.setStyleSheet("font-size: 27px;")
         layout.addWidget(label)
 
+        grid_layout = QGridLayout()
+
         # רשימת כפתורים עם שמות הפונקציות
-        buttons = [
-            ("יצירת כותרות לאוצריא .1", self.open_create_headers_otzria),
-            ("2. יצירת כותרות לאותיות בודדות", self.open_create_single_letter_headers),
-            ("3. הוספת מספר עמוד בכותרת הדף", self.open_add_page_number_to_heading),
-            ("4. שינוי רמת כותרת", self.open_change_heading_level),
-            ("5. הדגשת מילה ראשונה וניקוד בסוף קטע", self.open_emphasize_and_punctuate),
-            ("6. 'יצירת כותרות ל 'עמוד ב", self.open_create_page_b_headers),
-            ("7. 'החלפת כותרות ל 'עמוד ב", self.open_replace_page_b_headers),
-            ("8. בדיקת שגיאות בכותרות", self.open_check_heading_errors_original),
-            ("9. בדיקת שגיאות בכותרות מותאם לספרים על השס", self.open_check_heading_errors_custom),
-            ("10. המרת תמונה לטקסט", self.open_Image_To_Html_App),
-            ("11. נקודותיים ורווח", self.open_replace_colons_and_spaces),
+        button_info = [
+            ("1\n\nיצירת כותרות\nלאוצריא\nהתוכנה הראשית", self.open_create_headers_otzria),
+            ("2\n\nיצירת כותרות\nלאותיות בודדות\n", self.open_create_single_letter_headers),
+            ("3\n\nהוספת\nמספר עמוד\nבכותרת הדף", self.open_add_page_number_to_heading),
+            ("4\n\nשינוי רמת כותרת\n\n", self.open_change_heading_level),
+            ("5\n\nהדגשת\nמילה ראשונה\nוניקוד בסוף קטע", self.open_emphasize_and_punctuate),
+            ("6\n\nיצירת כותרות\nלעמוד ב\n", self.open_create_page_b_headers),
+            ("7\n\nהחלפת כותרות\nלעמוד ב\n", self.open_replace_page_b_headers),
+            ("8\n\nבדיקת שגיאות\n\n", self.open_check_heading_errors_original),
+            ("9\n\nבדיקת שגיאות\nלספרים על השס\n", self.open_check_heading_errors_custom),
+            ("10\n\nהמרת תמונה\nלטקסט\n", self.open_Image_To_Html_App),
+            ("11\n\nנקודותיים ורווח\n\n", self.open_replace_colons_and_spaces),
         ]
+        
+        buttons = []
+        for i, (text, func) in enumerate(button_info):
+            button = QPushButton(text)
+            button.setFixedSize(170, 150)  # הגדרת רוחב וגובה שווים (ריבוע)
+            button.setStyleSheet('font-size: 20px;')
+            button.clicked.connect(func)  # קישור כל כפתור לפונקציה המתאימה
 
-        for text, command in buttons:
-            btn = QPushButton(text)
-            btn.setFixedHeight(40)
-            btn.setStyleSheet("font-size: 20px;")
-            btn.clicked.connect(command)
-            layout.addWidget(btn)
+            # הוספת עיצוב של שוליים מעוגלים לכל כפתור
+            button.setStyleSheet("""
+                QPushButton {
+                    border-radius: 30px;
+                    padding: 10px;
+                    margin: 5;
+                    background-color: #eaeaea;
+                    color: black;
+                    font-weight: bold;
+                    font-family: "Segoe UI", Arial;
+                    font-size: 8.5pt;
+                }
+                QPushButton:hover {
+                    background-color: #b7b5b5;
+                }
+            """)
+            buttons.append(button)
 
-        self.setLayout(layout)
+        # מיקום הלחצנים בתוך ה- Grid
+        grid_layout.addWidget(buttons[0], 0, 2)  # שורה 1, טור 1
+        grid_layout.addWidget(buttons[1], 0, 1)  # שורה 1, טור 2
+        grid_layout.addWidget(buttons[2], 0, 0)  # שורה 1, טור 3
+        grid_layout.addWidget(buttons[3], 1, 2)  # שורה 2, טור 1
+        grid_layout.addWidget(buttons[4], 1, 1)  # שורה 2, טור 2
+        grid_layout.addWidget(buttons[5], 1, 0)  # שורה 2, טור 3
+        grid_layout.addWidget(buttons[6], 2, 2)  # שורה 3, טור 1
+        grid_layout.addWidget(buttons[7], 2, 1)  # שורה 3, טור 2
+        grid_layout.addWidget(buttons[8], 2, 0)  # שורה 3, טור 3
+        grid_layout.addWidget(buttons[9], 3, 2)  # שורה 4, טור 1-2 (ממוזג)
+        grid_layout.addWidget(buttons[10], 3, 1)  # שורה 4, טור 3
+
+        # יצירת Layout מסוג VBox עבור כפתור "אודות התוכנה"
+        main_layout = QVBoxLayout()
+
+        # הוספת כפתור "אודות התוכנה"
+        about_button = QPushButton("i")
+        about_button.setStyleSheet("font-weight: bold; font-size: 12pt;")
+        about_button.setCursor(QCursor(Qt.PointingHandCursor))
+        about_button.clicked.connect(self.open_about_dialog)
+        about_button.setFixedSize(40, 40)
+        main_layout.addLayout(grid_layout)  # הוספת ה-Grid Layout לתוך ה-VBox
+        main_layout.addWidget(about_button)  # הוספת הכפתור לתחתית
+
+        # הגדרת ה- Layout של החלון
+        self.setLayout(main_layout)
+
+    def open_about_dialog(self):
+        """פתיחת חלון 'אודות'"""
+        dialog = AboutDialog(self)
+        dialog.exec_()
 
     def open_create_headers_otzria(self):
         self.create_headers_window = CreateHeadersOtZria()
@@ -1864,7 +2278,7 @@ class MainMenu(QWidget):
     def open_check_heading_errors_custom(self):
         self.check_heading_errors_custom_window = CheckHeadingErrorsCustom()
         self.check_heading_errors_custom_window.show()
-
+        
     def open_Image_To_Html_App(self):
         self.Image_To_Html_App_window = ImageToHtmlApp()
         self.Image_To_Html_App_window.show()
@@ -1873,11 +2287,74 @@ class MainMenu(QWidget):
         self.replace_colons_and_spaces_window = ReplaceColonsAndSpaces()
         self.replace_colons_and_spaces_window.show()
    
-     # פונקציה לטעינת אייקון ממחרוזת Base64
+    # פונקציה לטעינת אייקון ממחרוזת Base64
     def load_icon_from_base64(self, base64_string):
         pixmap = QPixmap()
         pixmap.loadFromData(base64.b64decode(base64_string))
         return QIcon(pixmap)
+
+class AboutDialog(QDialog):
+    """חלון 'אודות'"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("אודות התוכנה")
+
+        layout = QVBoxLayout()
+
+        title_label = QLabel("עריכת ספרי דיקטה עבור 'אוצריא'")
+        title_label.setStyleSheet("font-size: 14pt; font-weight: bold;")
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+
+        version_label = QLabel("גירסה: v3.0")
+        version_label.setStyleSheet("font-size: 10pt;")
+        version_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(version_label)
+
+        date_label = QLabel("תאריך: כו טבת תשפה")
+        date_label.setStyleSheet("font-size: 10pt;")
+        date_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(date_label)
+
+        dev_label = QLabel("נכתב על ידי 'מתנדבי אוצריא', להצלחת לומדי התורה הקדושה")
+        dev_label.setStyleSheet("font-size: 10pt;")
+        dev_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(dev_label)
+
+        # קישור ל-GitHub
+        github_label = QLabel('ניתן להוריד את הגירסא האחרונה, וכן קובץ הדרכה, בקישור הבא: <a href="https://github.com/YOSEFTT/EditingDictaBooks/releases">GitHub</a>')
+        github_label.setStyleSheet("font-size: 10pt;")
+        github_label.setOpenExternalLinks(True)
+        github_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(github_label)
+
+        # קישור ל-מתמחים.טופ
+        mitmachimtop_label = QLabel('או כאן: <a href="https://mitmachim.top/topic/77509/%D7%94%D7%A1%D7%91%D7%A8-%D7%94%D7%95%D7%A1%D7%A4%D7%AA-%D7%95%D7%98%D7%99%D7%A4%D7%95%D7%9C-%D7%91%D7%A1%D7%A4%D7%A8%D7%99%D7%9D-%D7%9C-%D7%90%D7%95%D7%A6%D7%A8%D7%99%D7%90-%D7%9B%D7%A2%D7%AA-%D7%96%D7%94-%D7%A7%D7%9C">מתמחים.טופ</a>')
+        mitmachimtop_label.setStyleSheet("font-size: 10pt;")
+        mitmachimtop_label.setOpenExternalLinks(True)
+        mitmachimtop_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(mitmachimtop_label)
+
+        # קישור ל-דרייב
+        drive_label = QLabel('או בדרייב: <a href="http://did.li/otzaria-">כאן</a> או <a href="https://drive.google.com/open?id=1KEKudpCJUiK6Y0Eg44PD6cmbRsee1nRO&usp=drive_fs">כאן</a>')
+        drive_label.setStyleSheet("font-size: 10pt;")
+        drive_label.setOpenExternalLinks(True)
+        drive_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(drive_label)
+
+        info_label = QLabel("אפשר לבקש את התוכנה\nוכן להירשם לקבלת עדכון במייל כשיוצא עדכון לתוכנות אלו\nוכן לקבל תמיכה וסיוע בכל הקשור לתוכנה זו ולתוכנת 'אוצריא'\nבמייל הבא:")
+        info_label.setStyleSheet("font-size: 10pt;")
+        info_label.setAlignment(Qt.AlignCenter)
+        
+        gmail_label = QLabel('<a href="https://mail.google.com/mail/u/0/?view=cm&fs=1&to=otzaria.1%40gmail.com%E2%80%AC">otzaria.1@gmail.com</a>')
+        gmail_label.setStyleSheet("font-size: 10pt;")
+        gmail_label.setOpenExternalLinks(True)
+        gmail_label.setAlignment(Qt.AlignCenter)
+        
+        layout.addWidget(info_label)
+        layout.addWidget(gmail_label)
+
+        self.setLayout(layout)
    
 # ==========================================
 # Main Application
@@ -1895,4 +2372,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
