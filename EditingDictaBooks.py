@@ -142,7 +142,7 @@ class CreateHeadersOtZria(QWidget):
         remove = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’"]
         aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יה", "יו", "קיה", "קיו", "ריה", "ריו", "שיה", "שיו", "תיה", "תיו", "תקיה", "תקיו", "תריה", "תריו", "תשיה", "תשיו", "תתיה", "תתיו", "תתקיה", "תתקיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
-        cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "יוד", "למד", "נון", "דש", "חי", "טל", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערב", "ערה"]
+        cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "יוד", "למד", "נון", "דש", "חי", "טל", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערב", "ערה", "עדר", "רחצ"]
         append_list = []
         for i in aa:
             for ot_sofit in bb:
@@ -384,7 +384,7 @@ class CreateSingleLetterHeaders(QWidget):
         remove = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’"]
         aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יו", "קיה", "קיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
-        cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "חי", "יוד", "למד", "נון", "טל", "דש", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערה", "ערב"]
+        cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "חי", "יוד", "למד", "נון", "טל", "דש", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערה", "ערב", "עדר", "רחצ"]
         append_list = []
         for i in aa:
             for ot_sofit in bb:
@@ -519,6 +519,12 @@ class AddPageNumberToHeading(QWidget):
         except FileNotFoundError:
             QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
             return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return
+        except Exception as e:
+            QMessageBox.critical(self, "קלט לא תקין", f"שגיאה בפתיחת קובץ: {e}")
+            return
 
         updated_content = []
         changes_made = False
@@ -577,8 +583,8 @@ class AddPageNumberToHeading(QWidget):
             replace_with = self.replace_option.currentText()
             self.process_file(file_path, replace_with)
         else:
-            QMessageBox.warning(self, "קלט לא תקין", "אנא בחר או הזן נתיב קובץ")
-
+            QMessageBox.warning(self, "קלט לא תקין", "אנא בחר קובץ או הזן נתיב")
+  
     # פונקציה לטעינת אייקון ממחרוזת Base64
     def load_icon_from_base64(self, base64_string):
         pixmap = QPixmap()
@@ -655,28 +661,42 @@ class ChangeHeadingLevel(QWidget):
             self.file_entry.setText(file_path)
 
     def change_heading_level_func(self, file_path, current_level, new_level):
-        with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read()
+        file_path = self.file_entry.text()
+        if not file_path:
+            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
+            return
+        # בדיקת סוג הקובץ לפי סיומת
+        if not file_path.lower().endswith('.txt'):
+            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
+            return
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
 
-        current_tag = f"h{current_level}"
-        new_tag = f"h{new_level}"
-        updated_content = re.sub(f"<{current_tag}>(.*?)</{current_tag}>", f"<{new_tag}>\\1</{new_tag}>", content, flags=re.DOTALL)
+                current_tag = f"h{current_level}"
+                new_tag = f"h{new_level}"
+                updated_content = re.sub(f"<{current_tag}>(.*?)</{current_tag}>", f"<{new_tag}>\\1</{new_tag}>", content, flags=re.DOTALL)
 
-        if content == updated_content:
-            QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
-        else:
-            with open(file_path, 'w', encoding='utf-8') as file:
-                file.write(updated_content)
-            QMessageBox.information(self, "!מזל טוב", "רמות הכותרות עודכנו בהצלחה!")
+                if content == updated_content:
+                    QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
+                else:
+                    with open(file_path, 'w', encoding='utf-8') as file:
+                        file.write(updated_content)
+                    QMessageBox.information(self, "!מזל טוב", "רמות הכותרות עודכנו בהצלחה!")
+        
+        except FileNotFoundError:
+            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return
+        except Exception as e:
+            QMessageBox.critical(self, "שגיאה", f"ארעה שגיאה במהלך העיבוד: {str(e)}")    
 
     def run_script(self):
         file_path = self.file_entry.text()
         current_level = self.current_level_var.currentText()
         new_level = self.new_level_var.currentText()
-
-        if not file_path:
-            QMessageBox.critical(self, "קלט לא תקין", "אנא בחר קובץ")
-            return
 
         if not current_level.isdigit() or not new_level.isdigit():
             QMessageBox.critical(self, "קלט לא תקין", "אנא הכנס רמות מספריות חוקיות")
@@ -754,6 +774,11 @@ class EmphasizeAndPunctuate(QWidget):
             self.file_path_entry.setText(file_path)
 
     def process_file(self, file_path, add_ending, emphasize_start):
+        # בדיקת סוג הקובץ לפי סיומת
+        if not file_path.lower().endswith('.txt'):
+            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
+            return
+        
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 lines = file.readlines()
@@ -804,6 +829,12 @@ class EmphasizeAndPunctuate(QWidget):
             else:
                 QMessageBox.information(self, "!שים לב", "אין מה לשנות בקובץ זה")
 
+        except FileNotFoundError:
+            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return
         except Exception as e:
             QMessageBox.critical(self, "שגיאה", f"שגיאה בעיבוד הקובץ: {str(e)}")
 
@@ -962,24 +993,40 @@ class CreatePageBHeaders(QWidget):
         return new_text
 
     def process_file(self, file_path, header_level):
-        with open(file_path, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
+        # בדיקת סוג הקובץ לפי סיומת
+        if not file_path.lower().endswith('.txt'):
+            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
+            return
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                lines = file.readlines()
 
-        new_lines = []
-        counter = [0]  # מונה כותרות
+            new_lines = []
+            counter = [0]  # מונה כותרות
 
-        for line in lines:
-            new_line = self.strip_and_replace(line, header_level, counter)
-            new_lines.append(new_line)
+            for line in lines:
+                new_line = self.strip_and_replace(line, header_level, counter)
+                new_lines.append(new_line)
 
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.writelines(new_lines)
+            with open(file_path, 'w', encoding='utf-8') as file:
+                file.writelines(new_lines)
 
-        # הצגת הודעה מתאימה לפי כמות הכותרות שנוצרו
-        if counter[0] == 0:
-            QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
-        else:
-            QMessageBox.information(self, "!מזל טוב", f"נוספו {counter[0]} כותרות לקובץ!")
+            # הצגת הודעה מתאימה לפי כמות הכותרות שנוצרו
+            if counter[0] == 0:
+                QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
+            else:
+                QMessageBox.information(self, "!מזל טוב", f"נוספו {counter[0]} כותרות לקובץ!")
+        
+        except FileNotFoundError:
+            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return        
+        except Exception as e:
+            QMessageBox.critical(self, "קלט לא תקין", f"שגיאה בפתיחת קובץ: {e}")
+            return
 
     def run_script(self):
         file_path = self.file_entry.text()
@@ -1087,8 +1134,12 @@ class ReplacePageBHeaders(QWidget):
     def update_file(self, replace_type):
         file_path = self.file_entry.text()
         if not file_path:
-            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ.")
+            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
             return
+        # בדיקת סוג הקובץ לפי סיומת
+        if not file_path.lower().endswith('.txt'):
+            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
+            return      
 
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -1131,8 +1182,16 @@ class ReplacePageBHeaders(QWidget):
                 QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
             else:
                 QMessageBox.information(self, "!מזל טוב", f"הקובץ עודכן בהצלחה!\n\nבוצעו {replacements_made} החלפות")
+        
+        except FileNotFoundError:
+            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return
         except Exception as e:
-            QMessageBox.critical(self, "שגיאה", f"ארעה שגיאה במהלך העיבוד: {str(e)}")
+            QMessageBox.critical(self, "קלט לא תקין", f"שגיאה בפתיחת קובץ: {e}")
+            return
 
     def run_script(self):
         replace_type = self.replace_type.currentText()
@@ -1147,6 +1206,18 @@ class ReplacePageBHeaders(QWidget):
 # ==========================================
 # Script 8: בדיקת שגיאות בכותרות
 # ==========================================
+
+def create_labeled_widget(label_text, widget):
+    container = QWidget()
+    v_layout = QVBoxLayout()
+    v_layout.setContentsMargins(0, 0, 0, 0)  # מסיר את כל המרווחים סביב ה-layout
+    v_layout.setSpacing(2)  # מגדיר מרווח קטן בין הווידג'טים (ניתן להתאים לערך הרצוי)
+    label = QLabel(label_text)
+    label.setStyleSheet("font-size: 18px;")
+    v_layout.addWidget(label)
+    v_layout.addWidget(widget)
+    container.setLayout(v_layout)
+    return container
 
 # ------------------ מחלקה ראשונה: בדיקת שגיאות בכותרות ------------------ #
 class בדיקת_שגיאות_בכותרות(QWidget):
@@ -1179,27 +1250,30 @@ class בדיקת_שגיאות_בכותרות(QWidget):
         regex_layout.addWidget(re_start_label)
         layout.addLayout(regex_layout)
 
-        # כותרת לאזור התוצאות
-        unmatched_regex_label = QLabel(
-            "פירוט הכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\n"
-            "אם יש רווח לפני או אחרי הכותרת, זה גם יוצג כשגיאה"
-        )
-        unmatched_regex_label.setStyleSheet("font-size: 18px;")
-        layout.addWidget(unmatched_regex_label)
-
+        # יצירת QTextEdit והגדרותיהם
         self.unmatched_regex_text = QTextEdit()
-        self.unmatched_regex_text.setFixedHeight(220)
+        self.unmatched_regex_text.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.unmatched_regex_text.setReadOnly(True)
-        layout.addWidget(self.unmatched_regex_text)
-
-        unmatched_tags_label = QLabel("פירוט הכותרות שאינן לפי הסדר")
-        unmatched_tags_label.setStyleSheet("font-size: 18px;")
-        layout.addWidget(unmatched_tags_label)
 
         self.unmatched_tags_text = QTextEdit()
-        self.unmatched_tags_text.setFixedHeight(250)
+        self.unmatched_tags_text.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.unmatched_tags_text.setReadOnly(True)
-        layout.addWidget(self.unmatched_tags_text)
+
+        # עטיפת כל ווידג'ט במכולה עם תווית מעליו
+        regex_container = create_labeled_widget(
+            "פירוט הכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\nאם יש רווח לפני או אחרי הכותרת, זה גם יוצג כשגיאה",
+            self.unmatched_regex_text
+        )
+        tags_container = create_labeled_widget("פירוט הכותרות שאינן לפי הסדר", self.unmatched_tags_text)
+
+        # הוספת המכולות ל־QSplitter אנכי
+        v_splitter = QSplitter(Qt.Vertical)
+        v_splitter.setHandleWidth(10)  # עובי handle לפי בחירתך
+        v_splitter.addWidget(regex_container)
+        v_splitter.addWidget(tags_container)
+
+        # הוספת ה־splitter ל-layout הראשי
+        layout.addWidget(v_splitter)
 
         self.setLayout(layout)
 
@@ -1212,7 +1286,6 @@ class בדיקת_שגיאות_בכותרות(QWidget):
             with open(file_path, "r", encoding="utf-8") as file:
                 html_content = file.read()
         except Exception as e:
-            self.unmatched_regex_text.setPlainText(f"שגיאה בפתיחת קובץ: {e}")
             return
 
         re_start = self.re_start_entry.text()
@@ -1322,37 +1395,41 @@ class בדיקת_שגיאות_בכותרות(QWidget):
 class בדיקת_שגיאות_בתגים(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowTitle("בודק שגיאות בעיצוב")
         self.init_ui()
 
     def init_ui(self):
         main_layout = QVBoxLayout()
 
-        # כפתור היה בסקריפט המקורי - כאן לא נצטרך, כי אנחנו טוענים קובץ מלמעלה
-        # נשאיר רק את אזורי התוצאות.
-
-        self.opening_label = QLabel("תגים פותחים ללא תגים סוגרים")
-        self.opening_label.setStyleSheet("font-size: 18px;")
-        main_layout.addWidget(self.opening_label)
+        # יצירת תיבות טקסט והגדרותיהם
         self.opening_without_closing = QTextEdit()
+        self.opening_without_closing.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.opening_without_closing.setReadOnly(True)
-        main_layout.addWidget(self.opening_without_closing)
 
-        self.closing_label = QLabel("תגים סוגרים ללא תגים פותחים")
-        self.closing_label.setStyleSheet("font-size: 18px;")
-        main_layout.addWidget(self.closing_label)
         self.closing_without_opening = QTextEdit()
+        self.closing_without_opening.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.closing_without_opening.setReadOnly(True)
-        main_layout.addWidget(self.closing_without_opening)
 
-        self.heading_label = QLabel("טקסט שאינו חלק מכותרת, שנמצא באותה שורה עם הכותרת")
-        self.heading_label.setStyleSheet("font-size: 18px;")
-        main_layout.addWidget(self.heading_label)
         self.heading_errors = QTextEdit()
+        self.heading_errors.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.heading_errors.setReadOnly(True)
-        main_layout.addWidget(self.heading_errors)
 
-        self.setLayout(main_layout)
-        self.setWindowTitle("בודק שגיאות בעיצוב")
+        # עטיפת כל ווידג'ט במכולה עם תווית
+        opening_container = create_labeled_widget("תגים פותחים ללא תגים סוגרים", self.opening_without_closing)
+        closing_container = create_labeled_widget("תגים סוגרים ללא תגים פותחים", self.closing_without_opening)
+        heading_container = create_labeled_widget("טקסט שאינו חלק מכותרת, שנמצא באותה שורה עם הכותרת", self.heading_errors)
+
+        # יצירת QSplitter אנכי
+        v_splitter_tags = QSplitter(Qt.Vertical)
+        v_splitter_tags.setHandleWidth(10)
+        v_splitter_tags.addWidget(opening_container)
+        v_splitter_tags.addWidget(closing_container)
+        v_splitter_tags.addWidget(heading_container)
+
+        # הוספת QSplitter ל-layout הראשי
+        main_layout.addWidget(v_splitter_tags)
+
+        self.setLayout(main_layout) 
 
     def load_file_and_check(self, file_path):
         """
@@ -1368,7 +1445,6 @@ class בדיקת_שגיאות_בתגים(QWidget):
             with open(file_path, 'r', encoding='utf-8') as file:
                 lines = file.readlines()
         except Exception as e:
-            self.opening_without_closing.setPlainText(f"שגיאה בפתיחת קובץ: {e}")
             return
 
         open_tags = ["b", "big", "i", "small", "h2", "h3", "h4", "h5", "h6"]
@@ -1429,19 +1505,23 @@ class בדיקת_שגיאות_בתגים(QWidget):
 class CheckHeadingErrorsOriginal(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("בדיקת שגיאות בכותרות ובתגי העיצוב")
-        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setWindowTitle("בודק כותרות + בודק תגים ביחד")
+        self.setWindowIcon(self.get_app_icon())
 
         # שני ה־Widgets שלנו
         self.check_headings_widget = בדיקת_שגיאות_בכותרות()
         self.html_tag_checker_widget = בדיקת_שגיאות_בתגים()
-
+        self.check_headings_widget.resize(800, 400)
+        self.html_tag_checker_widget.resize(1200, 900)
+        
         # תיבות למעלה: נתיב קובץ וכפתור Browse
         top_layout = QHBoxLayout()
         self.file_path_label = QLabel("נתיב קובץ:")
         self.file_path_label.setStyleSheet("font-size: 18px;")
+
         self.file_path_edit = QLineEdit()
-        self.file_path_edit.setReadOnly(True)
+        self.file_path_edit.setReadOnly(False)
+        self.file_path_edit.returnPressed.connect(self.run_from_line_edit)
 
         self.browse_button = QPushButton("בחר קובץ")
         self.browse_button.setStyleSheet("font-size: 18px;")
@@ -1455,41 +1535,120 @@ class CheckHeadingErrorsOriginal(QWidget):
 
         # הפרדה אופקית (splitter) בין שני הרכיבים
         splitter = QSplitter(Qt.Horizontal)
-        splitter.addWidget(self.html_tag_checker_widget)
+        splitter.setStyleSheet("QSplitter::handle { background-color: gray; }")
+        splitter.setHandleWidth(5)               # מגדיר רוחב לפס הגרירה כדי שיהיה ברור
+        splitter.setStyleSheet("""
+            QSplitter::handle:horizontal {
+                width: 5px;
+                margin-left: 1.5px;
+                margin-right: 1.5px;
+                background: gray;
+            }
+        """)
+        
+        splitter.setChildrenCollapsible(False)   # מונע מקיפול אוטומטי של אחד מהווידג'טים
+        self.html_tag_checker_widget.setMinimumWidth(10)  # מגדיר רוחב מינימלי
+        self.check_headings_widget.setMinimumWidth(10)      # מגדיר רוחב מינימלי        
 
-        # פס אנכי באמצע
-        line = QFrame()
-        line.setFrameShape(QFrame.VLine)
-        line.setFrameShadow(QFrame.Sunken)
-        splitter.addWidget(line)
+        # עדכון בתוך בניית ה־ html_container:
+        self.html_container_layout = QVBoxLayout()
+        self.html_container_layout.setContentsMargins(0, 0, 0, 0)
+        self.html_container_layout.addWidget(self.html_tag_checker_widget)
+        # אל נוסיף כאן את ה־ pic_count_label
+        html_container = QWidget()
+        html_container.setLayout(self.html_container_layout)
+        splitter.addWidget(html_container)
+
+        html_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.check_headings_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        html_container.setMaximumHeight(16777215)
+        self.check_headings_widget.setMaximumHeight(16777215)
+        self.check_headings_widget.resize(1000, 400)
+        html_container.resize(800, 400)
+
+        self.pic_count_label = QLabel("")
+        self.pic_count_label.setStyleSheet("font-size: 18px; color: blue;")
 
         splitter.addWidget(self.check_headings_widget)
         splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(2, 1)
+        splitter.setStretchFactor(1, 1)
 
         # בניית ה־layout הכללי
         main_layout = QVBoxLayout()
-        main_layout.addLayout(top_layout)
-        main_layout.addWidget(splitter)
+        top_container = QWidget()
+        top_container.setLayout(top_layout)
+        top_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        main_layout.addWidget(top_container)
+
+        main_layout.addWidget(splitter, 1)
 
         self.setLayout(main_layout)
-        self.resize(1200, 700)  # גודל התחלתי
+        self.resize(1250, 700)  # גודל התחלתי
+
+    def process_file(self, file_path):
+        if not file_path:
+            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
+            return
+        # בדיקת סוג הקובץ לפי סיומת
+        if not file_path.lower().endswith('.txt'):
+            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
+            return      
+
+        # עדכון הנתיב בתיבת הטקסט (אם לא נעשה כבר)
+        self.file_path_edit.setText(file_path)
+
+        # הפעלת הבדיקות בשני ה־widgets
+        self.check_headings_widget.load_file_and_process(file_path)
+        self.html_tag_checker_widget.load_file_and_check(file_path)
+
+        # קריאת תוכן הקובץ עם טיפול בשגיאות
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+        except FileNotFoundError:
+            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return
+        except Exception as e:
+            QMessageBox.critical(self, "קלט לא תקין", f"שגיאה בפתיחת קובץ: {e}")
+            return
+
+        # בדיקה עבור המחרוזת "ציור בספר"
+        count = content.count("ציור בספר")
+        if count > 0:
+            text = (f'שים לב! יש בספר {count} ציורים.\n'
+                    'חפש בתוך הספר את המילים "ציור בספר",\n'
+                    'הורד את הספר מהיברובוקס, עשה צילום מסך לתמונה,\n'
+                    'והמר אותה לטקסט ע"י תוכנה מספר 10')
+            self.pic_count_label.setText(text)
+            if self.pic_count_label.parent() is None:
+                self.html_container_layout.addWidget(self.pic_count_label)
+            self.pic_count_label.setVisible(True)
+        else:
+            self.pic_count_label.setText("")
+            if self.pic_count_label.parent() is not None:
+                self.html_container_layout.removeWidget(self.pic_count_label)
+                self.pic_count_label.setParent(None)
 
     def browse_file(self):
         """
-        בוחרים קובץ, שמים את הנתיב ב-QLineEdit ומריצים את שתי הבדיקות.
+        בוחרים קובץ, מעדכנים את תיבת הנתיב ומריצים את כל הבדיקות.
         """
         file_path, _ = QFileDialog.getOpenFileName(self, "בחר קובץ", "", "קבצי טקסט (*.txt);;כל הקבצים (*)")
         if file_path:
-            self.file_path_edit.setText(file_path)
-            # מפעילים את הבדיקות בשני ה־ widgets
-            self.check_headings_widget.load_file_and_process(file_path)
-            self.html_tag_checker_widget.load_file_and_check(file_path)
+            self.process_file(file_path)
+
+    def run_from_line_edit(self):
+        file_path = self.file_path_edit.text().strip()
+        if file_path:
+            self.process_file(file_path)
 
     # פונקציה לטעינת אייקון ממחרוזת Base64
-    def load_icon_from_base64(self, base64_string):
+    def get_app_icon(self):
         pixmap = QPixmap()
-        pixmap.loadFromData(base64.b64decode(base64_string))
+        pixmap.loadFromData(base64.b64decode(icon_base64))
         return QIcon(pixmap)
    
 # ==========================================
@@ -1528,27 +1687,30 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
         regex_layout.addWidget(re_start_label)
         layout.addLayout(regex_layout)
 
-        # כותרת לאזור התוצאות
-        unmatched_regex_label = QLabel(
-            "פירוט הכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\n"
-            "אם יש רווח לפני או אחרי הכותרת, זה גם יוצג כשגיאה"
-        )
-        unmatched_regex_label.setStyleSheet("font-size: 18px;")
-        layout.addWidget(unmatched_regex_label)
-
+        # יצירת QTextEdit והגדרותיהם
         self.unmatched_regex_text = QTextEdit()
-        self.unmatched_regex_text.setFixedHeight(220)
+        self.unmatched_regex_text.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.unmatched_regex_text.setReadOnly(True)
-        layout.addWidget(self.unmatched_regex_text)
-
-        unmatched_tags_label = QLabel("פירוט הכותרות שאינן לפי הסדר")
-        unmatched_tags_label.setStyleSheet("font-size: 18px;")
-        layout.addWidget(unmatched_tags_label)
 
         self.unmatched_tags_text = QTextEdit()
-        self.unmatched_tags_text.setFixedHeight(250)
+        self.unmatched_tags_text.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.unmatched_tags_text.setReadOnly(True)
-        layout.addWidget(self.unmatched_tags_text)
+
+        # עטיפת כל ווידג'ט במכולה עם תווית מעליו
+        regex_container = create_labeled_widget(
+            "פירוט הכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\nאם יש רווח לפני או אחרי הכותרת, זה גם יוצג כשגיאה",
+            self.unmatched_regex_text
+        )
+        tags_container = create_labeled_widget("פירוט הכותרות שאינן לפי הסדר\nהתוכנה מדלגת בבדיקה בכל פעם על כותרת אחת, בגלל הכותרות הכפולות לעמוד ב", self.unmatched_tags_text)
+
+        # הוספת המכולות ל־QSplitter אנכי
+        v_splitter = QSplitter(Qt.Vertical)
+        v_splitter.setHandleWidth(10)  # עובי handle לפי בחירתך
+        v_splitter.addWidget(regex_container)
+        v_splitter.addWidget(tags_container)
+
+        # הוספת ה־splitter ל-layout הראשי
+        layout.addWidget(v_splitter)
 
         self.setLayout(layout)
 
@@ -1561,7 +1723,6 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
             with open(file_path, "r", encoding="utf-8") as file:
                 html_content = file.read()
         except Exception as e:
-            self.unmatched_regex_text.setPlainText(f"שגיאה בפתיחת קובץ: {e}")
             return
 
         re_start = self.re_start_entry.text()
@@ -1672,37 +1833,43 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 class בדיקת_שגיאות_בתגים_לשס(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowTitle("בודק שגיאות בעיצוב")
         self.init_ui()
 
     def init_ui(self):
         main_layout = QVBoxLayout()
 
-        # כפתור היה בסקריפט המקורי - כאן לא נצטרך, כי אנחנו טוענים קובץ מלמעלה
-        # נשאיר רק את אזורי התוצאות.
 
-        self.opening_label = QLabel("תגים פותחים ללא תגים סוגרים")
-        self.opening_label.setStyleSheet("font-size: 18px;")
-        main_layout.addWidget(self.opening_label)
+        # יצירת תיבות טקסט והגדרותיהם
         self.opening_without_closing = QTextEdit()
+        self.opening_without_closing.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.opening_without_closing.setReadOnly(True)
-        main_layout.addWidget(self.opening_without_closing)
 
-        self.closing_label = QLabel("תגים סוגרים ללא תגים פותחים")
-        self.closing_label.setStyleSheet("font-size: 18px;")
-        main_layout.addWidget(self.closing_label)
         self.closing_without_opening = QTextEdit()
+        self.closing_without_opening.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.closing_without_opening.setReadOnly(True)
-        main_layout.addWidget(self.closing_without_opening)
 
-        self.heading_label = QLabel("טקסט שאינו חלק מכותרת, שנמצא באותה שורה עם הכותרת")
-        self.heading_label.setStyleSheet("font-size: 18px;")
-        main_layout.addWidget(self.heading_label)
         self.heading_errors = QTextEdit()
+        self.heading_errors.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.heading_errors.setReadOnly(True)
-        main_layout.addWidget(self.heading_errors)
+
+        # עטיפת כל ווידג'ט במכולה עם תווית
+        opening_container = create_labeled_widget("תגים פותחים ללא תגים סוגרים", self.opening_without_closing)
+        closing_container = create_labeled_widget("תגים סוגרים ללא תגים פותחים", self.closing_without_opening)
+        heading_container = create_labeled_widget("טקסט שאינו חלק מכותרת, שנמצא באותה שורה עם הכותרת", self.heading_errors)
+
+        # יצירת QSplitter אנכי
+        v_splitter_tags = QSplitter(Qt.Vertical)
+        v_splitter_tags.setHandleWidth(10)
+        v_splitter_tags.addWidget(opening_container)
+        v_splitter_tags.addWidget(closing_container)
+        v_splitter_tags.addWidget(heading_container)
+
+        # הוספת QSplitter ל-layout הראשי
+        main_layout.addWidget(v_splitter_tags)
 
         self.setLayout(main_layout)
-        self.setWindowTitle("בודק שגיאות בעיצוב")
+        
 
     def load_file_and_check(self, file_path):
         """
@@ -1718,7 +1885,6 @@ class בדיקת_שגיאות_בתגים_לשס(QWidget):
             with open(file_path, 'r', encoding='utf-8') as file:
                 lines = file.readlines()
         except Exception as e:
-            self.opening_without_closing.setPlainText(f"שגיאה בפתיחת קובץ: {e}")
             return
 
         open_tags = ["b", "big", "i", "small", "h2", "h3", "h4", "h5", "h6"]
@@ -1779,19 +1945,23 @@ class בדיקת_שגיאות_בתגים_לשס(QWidget):
 class CheckHeadingErrorsCustom(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("בדיקת שגיאות בכותרות ובתגי העיצוב לספרים על השס")
-        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setWindowTitle("בודק כותרות + בודק תגים ביחד")
+        self.setWindowIcon(self.get_app_icon())
 
         # שני ה־Widgets שלנו
         self.check_headings_widget = בדיקת_שגיאות_בכותרות_לשס()
         self.html_tag_checker_widget = בדיקת_שגיאות_בתגים_לשס()
-
+        self.check_headings_widget.resize(800, 400)
+        self.html_tag_checker_widget.resize(1200, 900)
+        
         # תיבות למעלה: נתיב קובץ וכפתור Browse
         top_layout = QHBoxLayout()
         self.file_path_label = QLabel("נתיב קובץ:")
         self.file_path_label.setStyleSheet("font-size: 18px;")
+
         self.file_path_edit = QLineEdit()
-        self.file_path_edit.setReadOnly(True)
+        self.file_path_edit.setReadOnly(False)
+        self.file_path_edit.returnPressed.connect(self.run_from_line_edit)
 
         self.browse_button = QPushButton("בחר קובץ")
         self.browse_button.setStyleSheet("font-size: 18px;")
@@ -1805,41 +1975,120 @@ class CheckHeadingErrorsCustom(QWidget):
 
         # הפרדה אופקית (splitter) בין שני הרכיבים
         splitter = QSplitter(Qt.Horizontal)
-        splitter.addWidget(self.html_tag_checker_widget)
+        splitter.setStyleSheet("QSplitter::handle { background-color: gray; }")
+        splitter.setHandleWidth(5)               # מגדיר רוחב לפס הגרירה כדי שיהיה ברור
+        splitter.setStyleSheet("""
+            QSplitter::handle:horizontal {
+                width: 5px;
+                margin-left: 1.5px;
+                margin-right: 1.5px;
+                background: gray;
+            }
+        """)
+        
+        splitter.setChildrenCollapsible(False)   # מונע מקיפול אוטומטי של אחד מהווידג'טים
+        self.html_tag_checker_widget.setMinimumWidth(10)  # מגדיר רוחב מינימלי
+        self.check_headings_widget.setMinimumWidth(10)      # מגדיר רוחב מינימלי        
 
-        # פס אנכי באמצע
-        line = QFrame()
-        line.setFrameShape(QFrame.VLine)
-        line.setFrameShadow(QFrame.Sunken)
-        splitter.addWidget(line)
+        # עדכון בתוך בניית ה־ html_container:
+        self.html_container_layout = QVBoxLayout()
+        self.html_container_layout.setContentsMargins(0, 0, 0, 0)
+        self.html_container_layout.addWidget(self.html_tag_checker_widget)
+        # אל נוסיף כאן את ה־ pic_count_label
+        html_container = QWidget()
+        html_container.setLayout(self.html_container_layout)
+        splitter.addWidget(html_container)
+
+        html_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.check_headings_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        html_container.setMaximumHeight(16777215)
+        self.check_headings_widget.setMaximumHeight(16777215)
+        self.check_headings_widget.resize(1000, 400)
+        html_container.resize(800, 400)
+
+        self.pic_count_label = QLabel("")
+        self.pic_count_label.setStyleSheet("font-size: 18px; color: blue;")
 
         splitter.addWidget(self.check_headings_widget)
         splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(2, 1)
+        splitter.setStretchFactor(1, 1)
 
         # בניית ה־layout הכללי
         main_layout = QVBoxLayout()
-        main_layout.addLayout(top_layout)
-        main_layout.addWidget(splitter)
+        top_container = QWidget()
+        top_container.setLayout(top_layout)
+        top_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        main_layout.addWidget(top_container)
+
+        main_layout.addWidget(splitter, 1)
 
         self.setLayout(main_layout)
-        self.resize(1200, 700)  # גודל התחלתי
+        self.resize(1250, 700)  # גודל התחלתי
+
+    def process_file(self, file_path):
+        if not file_path:
+            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
+            return
+        # בדיקת סוג הקובץ לפי סיומת
+        if not file_path.lower().endswith('.txt'):
+            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
+            return      
+
+        # עדכון הנתיב בתיבת הטקסט (אם לא נעשה כבר)
+        self.file_path_edit.setText(file_path)
+
+        # הפעלת הבדיקות בשני ה־widgets
+        self.check_headings_widget.load_file_and_process(file_path)
+        self.html_tag_checker_widget.load_file_and_check(file_path)
+
+        # קריאת תוכן הקובץ עם טיפול בשגיאות
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+        except FileNotFoundError:
+            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return
+        except Exception as e:
+            QMessageBox.critical(self, "קלט לא תקין", f"שגיאה בפתיחת קובץ: {e}")
+            return
+
+        # בדיקה עבור המחרוזת "ציור בספר"
+        count = content.count("ציור בספר")
+        if count > 0:
+            text = (f'שים לב! יש בספר {count} ציורים.\n'
+                    'חפש בתוך הספר את המילים "ציור בספר",\n'
+                    'הורד את הספר מהיברובוקס, עשה צילום מסך לתמונה,\n'
+                    'והמר אותה לטקסט ע"י תוכנה מספר 10')
+            self.pic_count_label.setText(text)
+            if self.pic_count_label.parent() is None:
+                self.html_container_layout.addWidget(self.pic_count_label)
+            self.pic_count_label.setVisible(True)
+        else:
+            self.pic_count_label.setText("")
+            if self.pic_count_label.parent() is not None:
+                self.html_container_layout.removeWidget(self.pic_count_label)
+                self.pic_count_label.setParent(None)
 
     def browse_file(self):
         """
-        בוחרים קובץ, שמים את הנתיב ב-QLineEdit ומריצים את שתי הבדיקות.
+        בוחרים קובץ, מעדכנים את תיבת הנתיב ומריצים את כל הבדיקות.
         """
         file_path, _ = QFileDialog.getOpenFileName(self, "בחר קובץ", "", "קבצי טקסט (*.txt);;כל הקבצים (*)")
         if file_path:
-            self.file_path_edit.setText(file_path)
-            # מפעילים את הבדיקות בשני ה־ widgets
-            self.check_headings_widget.load_file_and_process(file_path)
-            self.html_tag_checker_widget.load_file_and_check(file_path)
+            self.process_file(file_path)
+
+    def run_from_line_edit(self):
+        file_path = self.file_path_edit.text().strip()
+        if file_path:
+            self.process_file(file_path)
 
     # פונקציה לטעינת אייקון ממחרוזת Base64
-    def load_icon_from_base64(self, base64_string):
+    def get_app_icon(self):
         pixmap = QPixmap()
-        pixmap.loadFromData(base64.b64decode(base64_string))
+        pixmap.loadFromData(base64.b64decode(icon_base64))
         return QIcon(pixmap)
 
 # ==========================================
@@ -2116,8 +2365,12 @@ class ReplaceColonsAndSpaces(QWidget):
     def run_processing(self):
         file_path = self.file_path_entry.text()
         if not file_path:
-            QMessageBox.warning(self, "קלט לא תקין", "לא נבחר קובץ")
+            QMessageBox.warning(self, "קלט לא תקין", "לא נבחר קובץ!")
             return
+        # בדיקת סוג הקובץ לפי סיומת
+        if not file_path.lower().endswith('.txt'):
+            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
+            return      
 
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -2135,6 +2388,13 @@ class ReplaceColonsAndSpaces(QWidget):
                 with open(file_path, 'w', encoding='utf-8') as file:
                     file.write(new_content)
                 QMessageBox.information(self, "!מזל טוב", "ההחלפה הושלמה בהצלחה!")
+        
+        except FileNotFoundError:
+            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return   
         except Exception as e:
             QMessageBox.critical(self, "שגיאה", f"ארעה שגיאה במהלך העיבוד: {str(e)}")
 
@@ -2306,7 +2566,7 @@ class AboutDialog(QDialog):
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
 
-        version_label = QLabel("גירסה: v3.0")
+        version_label = QLabel("גירסה: v3.1")
         version_label.setStyleSheet("font-size: 10pt;")
         version_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(version_label)
