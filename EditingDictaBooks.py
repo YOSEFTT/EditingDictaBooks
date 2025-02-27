@@ -4,8 +4,8 @@ import ctypes
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QVBoxLayout, QLabel,
-    QFileDialog, QLineEdit, QMessageBox, QComboBox, QHBoxLayout,
-    QCheckBox, QTextEdit, QDialog, QFrame, QSplitter, QGridLayout
+    QLayout, QFileDialog, QLineEdit, QMessageBox, QComboBox, QHBoxLayout,
+    QCheckBox, QTextEdit, QDialog, QFrame, QSplitter, QGridLayout, QSpacerItem, QSizePolicy
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QCursor
@@ -27,6 +27,7 @@ icon_base64 = "iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAGP0lEQVR4Ae2dfUgUa
 # ==========================================
 # Script 1: יצירת כותרות לאוצריא
 # ==========================================
+
 class CreateHeadersOtZria(QWidget):
     def __init__(self):
         super().__init__()
@@ -243,6 +244,7 @@ class CreateSingleLetterHeaders(QWidget):
         self.init_ui()
 
     def init_ui(self):
+        self.setLayoutDirection(Qt.RightToLeft)  # הגדרת כיוון ימין לשמאל
         layout = QVBoxLayout()
 
         # נתיב קובץ
@@ -253,66 +255,36 @@ class CreateSingleLetterHeaders(QWidget):
         self.file_entry = QLineEdit()
         file_label = QLabel("נתיב קובץ:")
         file_label.setStyleSheet("font-size: 20px;")
-        file_layout.addWidget(browse_button)
-        file_layout.addWidget(self.file_entry)
         file_layout.addWidget(file_label)
+        file_layout.addWidget(self.file_entry)
+        file_layout.addWidget(browse_button)
         layout.addLayout(file_layout)
 
         # תו בתחילת האות ותו בסוף האות
         start_char_label = QLabel("תו בתחילת האות:")
         self.start_var = QComboBox()
+        self.start_var.setLayoutDirection(Qt.RightToLeft)  # הגדרת כיוון כללי
         self.start_var.addItems(["", "(", "["])
+        self.start_var.setStyleSheet("text-align: right;")  # מוודא שהטקסט ייושר לימין
         end_char_label = QLabel("     תו/ים בסוף האות:")
         self.finde_var = QComboBox()
         self.finde_var.addItems(['', '.', ',', "'", "',", "'.", ']', ')', "']", "')", "].", ").", "],", "),", "'),", "').", "'],", "']."])
                
         regex_layout = QHBoxLayout()
-        regex_layout.addWidget(self.finde_var)
-        regex_layout.addWidget(end_char_label)
-        regex_layout.addWidget(self.start_var)
         regex_layout.addWidget(start_char_label)
+        regex_layout.addWidget(self.start_var)
+        regex_layout.addWidget(end_char_label)
+        regex_layout.addWidget(self.finde_var)
         layout.addLayout(regex_layout)
-               
        
         # הסבר למשתמש
         explanation = QLabel(
-            "שים לב!\nהבחירה בברירת מחדל [השורה הריקה], משמעותה סימון כל האפשרויות. \nצורת הכתיבה בתוכנה היא משמאל לימין, ולכן גם תווי הסוגריים מוצגים הפוך,\nאך הכל פועל כמצופה"
+            "שים לב!\nהבחירה בברירת מחדל [השורה הריקה], משמעותה סימון כל האפשרויות."
         )
         explanation.setAlignment(Qt.AlignCenter)
         explanation.setStyleSheet("font-size: 18px;")
         explanation.setWordWrap(True)
         layout.addWidget(explanation)
-
-        # התעלם מהתווים
-        ignore_layout = QHBoxLayout()
-        ignore_label = QLabel("התעלם מהתווים הבאים:")
-        ignore_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.ignore_entry = QLineEdit()
-        self.ignore_entry.setText('<big> </big> " ')
-        ignore_layout.addWidget(self.ignore_entry)
-        ignore_layout.addWidget(ignore_label)
-        layout.addLayout(ignore_layout)
-
-        # הסרת תווים
-        remove_layout = QHBoxLayout()
-        remove_label = QLabel("הסר את התווים הבאים:")
-        remove_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.remove_entry = QLineEdit()
-        self.remove_entry.setText('<b> </b> <big> </big> , : " \' . ( ) [ ] { }')
-        remove_layout.addWidget(self.remove_entry)
-        remove_layout.addWidget(remove_label)
-        layout.addLayout(remove_layout)
-
-        # מספר סימן מקסימלי
-        end_layout = QHBoxLayout()
-        end_label = QLabel("מספר סימן מקסימלי:")
-        self.end_var = QComboBox()
-        self.end_var.setFixedWidth(65)
-        self.end_var.addItems([str(i) for i in range(1, 1000)])
-        self.end_var.setCurrentText("999")
-        end_layout.addWidget(self.end_var)
-        end_layout.addWidget(end_label)
-        layout.addLayout(end_layout)
 
         # רמת כותרת
         heading_layout = QHBoxLayout()
@@ -324,14 +296,46 @@ class CreateSingleLetterHeaders(QWidget):
         self.level_var.setStyleSheet("font-size: 20px;")
         self.level_var.addItems([str(i) for i in range(2, 7)])
         self.level_var.setCurrentText("3")
-        heading_layout.addWidget(self.level_var, alignment=Qt.AlignRight)
         heading_layout.addWidget(heading_label)
+        heading_layout.addWidget(self.level_var, alignment=Qt.AlignLeft | Qt.AlignVCenter)
+        
         layout.addLayout(heading_layout)
 
         # תיבת סימון לחיפוש עם תווי הדגשה בלבד
         self.bold_var = QCheckBox("לחפש עם תווי הדגשה בלבד")
         self.bold_var.setChecked(True)
         layout.addWidget(self.bold_var)
+
+        # התעלם מהתווים
+        ignore_layout = QHBoxLayout()
+        ignore_label = QLabel("התעלם מהתווים הבאים:")
+        ignore_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.ignore_entry = QLineEdit()
+        self.ignore_entry.setText('<big> </big> " ')
+        ignore_layout.addWidget(ignore_label)
+        ignore_layout.addWidget(self.ignore_entry)
+        layout.addLayout(ignore_layout)
+
+        # הסרת תווים
+        remove_layout = QHBoxLayout()
+        remove_label = QLabel("הסר את התווים הבאים:")
+        remove_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.remove_entry = QLineEdit()
+        self.remove_entry.setText('<b> </b> <big> </big> , : " \' . ( ) [ ] { }')
+        remove_layout.addWidget(remove_label)
+        remove_layout.addWidget(self.remove_entry)
+        layout.addLayout(remove_layout)
+
+        # מספר סימן מקסימלי
+        end_layout = QHBoxLayout()
+        end_label = QLabel("מספר סימן מקסימלי:")
+        self.end_var = QComboBox()
+        self.end_var.setFixedWidth(65)
+        self.end_var.addItems([str(i) for i in range(1, 1000)])
+        self.end_var.setCurrentText("999")
+        end_layout.addWidget(end_label)
+        end_layout.addWidget(self.end_var)
+        layout.addLayout(end_layout)
 
         # כפתור הפעלה
         run_button = QPushButton("הפעל")
@@ -445,9 +449,9 @@ class AddPageNumberToHeading(QWidget):
         # הסבר למשתמש
         explanation = QLabel(
             "התוכנה מחליפה בקובץ בכל מקום שיש כותרת 'דף' ובתחילת שורה הבאה כתוב: ע\"א או ע\"ב, כגון:\n\n"
-            "</h2>דף ב<h2>\nע\"א [טקסט כלשהו]\n\n"
+            "<h2>דף ב</h2>\nע\"א [טקסט כלשהו]\n\n"
             "הפעלת התוכנה תעדכן את הכותרת ל:\n\n"
-            "</h2>דף ב.<h2>\n[טקסט כלשהו]\n"
+            "<h2>דף ב.</h2>\n[טקסט כלשהו]\n"
         )
         explanation.setStyleSheet("font-size: 20px;")
         explanation.setAlignment(Qt.AlignCenter)
@@ -1067,7 +1071,7 @@ class ReplacePageBHeaders(QWidget):
 
         # הסבר למשתמש
         explanation = QLabel(
-            "שים לב!\nהתוכנה פועלת רק אם הדפים והעמודים הוגדרו כבר ככותרות\n[לא משנה באיזה רמת כותרת]\nכגון:  </h3>עמוד ב<h3> או: </h2>עמוד ב<h2> וכן הלאה\n\nזהירות!\nבדוק היטב שלא פספסת שום כותרת של 'דף' לפני שאתה מריץ תוכנה זו\nכי במקרה של פספוס, הכותרת 'עמוד ב' שאחרי הפספוס תהפך לכותרת שגויה\n"
+            "שים לב!\nהתוכנה פועלת רק אם הדפים והעמודים הוגדרו כבר ככותרות\n[לא משנה באיזה רמת כותרת]\nכגון:  <h3>עמוד ב</h3> או: <h2>עמוד ב</h2> וכן הלאה\n\nזהירות!\nבדוק היטב שלא פספסת שום כותרת של 'דף' לפני שאתה מריץ תוכנה זו\nכי במקרה של פספוס, הכותרת 'עמוד ב' שאחרי הפספוס תהפך לכותרת שגויה\n"
         )
         explanation.setAlignment(Qt.AlignCenter)
         explanation.setStyleSheet("font-size: 18px;")
@@ -2092,8 +2096,9 @@ class CheckHeadingErrorsCustom(QWidget):
         return QIcon(pixmap)
 
 # ==========================================
-# Script 11: המרת תמונה לטקסט
+# Script 10: המרת תמונה לטקסט
 # ==========================================
+
 class ImageToHtmlApp(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -2314,8 +2319,150 @@ class ImageToHtmlApp(QtWidgets.QWidget):
         return QIcon(pixmap)
 
 # ==========================================
+# Script 11: תיקון שגיאות נפוצות
+# ==========================================
+
+class TextCleanerApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setLayoutDirection(Qt.RightToLeft)
+
+    def initUI(self):
+        layout = QVBoxLayout()
+        
+        filePathLayout = QHBoxLayout()
+        self.filePath = QLineEdit()
+        fileLabel = QLabel("נתיב קובץ:")
+        filePathLayout.addWidget(fileLabel)
+        filePathLayout.addWidget(self.filePath)
+
+        layout.addLayout(filePathLayout)
+        
+        self.loadBtn = QPushButton("טען קובץ")
+        self.loadBtn.clicked.connect(self.loadFile)
+        layout.addWidget(self.loadBtn)
+        
+        buttonLayout = QHBoxLayout()
+        
+        self.selectAllBtn = QPushButton("בחר הכל")
+        self.selectAllBtn.clicked.connect(self.selectAll)
+        buttonLayout.addWidget(self.selectAllBtn)
+        
+        self.deselectAllBtn = QPushButton("בטל הכל")
+        self.deselectAllBtn.clicked.connect(self.deselectAll)
+        buttonLayout.addWidget(self.deselectAllBtn)
+        
+        layout.addLayout(buttonLayout)
+        
+        self.checkBoxes = {
+            "remove_empty_lines": QCheckBox("מחיקת שורות ריקות"),
+            "remove_double_spaces": QCheckBox("מחיקת רווחים כפולים"),
+            "remove_spaces_before": QCheckBox("\u202Bמחיקת רווחים לפני - . , : ) ]"),
+            "remove_spaces_after": QCheckBox("\u202Bמחיקת רווחים אחרי - [ ("),
+            "remove_spaces_around_newlines": QCheckBox("מחיקת רווחים לפני ואחרי אנטר"),
+            "replace_double_quotes": QCheckBox("החלפת 2 גרשים בודדים בגרשיים"),
+            "normalize_quotes": QCheckBox("המרת גרשיים מוזרים לגרשיים רגילים"),
+        }
+
+        for checkbox in self.checkBoxes.values():
+            checkbox.setChecked(True)     
+            layout.addWidget(checkbox)
+        
+        self.cleanBtn = QPushButton("הרץ כעת")
+        self.cleanBtn.clicked.connect(self.cleanText)
+        layout.addWidget(self.cleanBtn)
+        
+        self.undoBtn = QPushButton("בטל שינוי אחרון")
+        self.undoBtn.clicked.connect(self.undoChanges)
+        layout.addWidget(self.undoBtn)
+        
+        self.setLayout(layout)
+        self.setWindowTitle("תיקון שגיאות נפוצות")
+        self.resize(500, 400)
+        self.originalText = ""
+
+    def cleanText(self, filePath):
+        filePath = self.filePath.text()
+ 
+        if not filePath:
+            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
+            return
+        
+        # בדיקת סוג הקובץ לפי סיומת
+        if not self.filePath.text().endswith('.txt'):
+            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
+            return   
+        
+        try:
+            with open(self.filePath.text(), 'r', encoding='utf-8') as file:
+                text = file.read()
+            
+            self.originalText = text
+            
+            if self.checkBoxes["remove_empty_lines"].isChecked():
+                text = re.sub(r'\n\s*\n', '\n', text)
+            if self.checkBoxes["remove_double_spaces"].isChecked():
+                text = re.sub(r' +', ' ', text)
+            if self.checkBoxes["remove_spaces_before"].isChecked():
+                text = re.sub(r'\s+([\)\],.:])', r'\1', text)
+            if self.checkBoxes["remove_spaces_after"].isChecked():
+                text = re.sub(r'([\[\(])\s+', r'\1', text)
+            if self.checkBoxes["remove_spaces_around_newlines"].isChecked():
+                text = re.sub(r'\s*\n\s*', '\n', text)
+            if self.checkBoxes["replace_double_quotes"].isChecked():
+                text = text.replace("''", '"').replace("``", '"').replace("’’", '"')
+            if self.checkBoxes["normalize_quotes"].isChecked():
+                text = text.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'").replace("„", '"')
+            
+            text = text.rstrip()  # מחיקת שורה אחרונה אם היא ריקה
+
+            if text == self.originalText:
+                QMessageBox.information(self, "שינויי טקסט", "אין מה להחליף בקובץ זה.")
+            else:
+                with open(self.filePath.text(), 'w', encoding='utf-8') as file:
+                    file.write(text)
+                QMessageBox.information(self, "שינויי טקסט", "השינויים בוצעו בהצלחה.")
+
+        except FileNotFoundError:
+            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            return
+        except UnicodeDecodeError:
+            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            return
+        except Exception as e:
+            QMessageBox.critical(self, "שגיאה", f"שגיאה בעיבוד הקובץ: {str(e)}")
+
+    def loadFile(self):
+        options = QFileDialog.Options()
+        fileName, _ = QFileDialog.getOpenFileName(self, "בחר קובץ טקסט", "", "קבצי טקסט (*.txt);", options=options)
+        if fileName:
+            self.filePath.setText(fileName)
+    
+    def selectAll(self):
+        for checkbox in self.checkBoxes.values():
+            checkbox.setChecked(True)
+    
+    def deselectAll(self):
+        for checkbox in self.checkBoxes.values():
+            checkbox.setChecked(False)
+    
+    def undoChanges(self):
+        if self.filePath.text() and self.originalText:
+            with open(self.filePath.text(), 'w', encoding='utf-8') as file:
+                file.write(self.originalText)
+
+    # פונקציה לטעינת אייקון ממחרוזת Base64
+    def load_icon_from_base64(self, base64_string):
+        pixmap = QPixmap()
+        pixmap.loadFromData(base64.b64decode(base64_string))
+        return QIcon(pixmap)
+
+# ==========================================
 # Script 12: נקודותיים ורווח
 # ==========================================
+
 class ReplaceColonsAndSpaces(QWidget):
     def __init__(self):
         super().__init__()
@@ -2413,6 +2560,7 @@ class MainMenu(QWidget):
        
         # הגדרת החלון
         self.setWindowTitle("עריכת ספרי דיקטה עבור אוצריא")
+        self.setLayoutDirection(Qt.RightToLeft)
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
         self.init_ui()
 
@@ -2442,7 +2590,8 @@ class MainMenu(QWidget):
             ("8\n\nבדיקת שגיאות\n\n", self.open_check_heading_errors_original),
             ("9\n\nבדיקת שגיאות\nלספרים על השס\n", self.open_check_heading_errors_custom),
             ("10\n\nהמרת תמונה\nלטקסט\n", self.open_Image_To_Html_App),
-            ("11\n\nנקודותיים ורווח\n\n", self.open_replace_colons_and_spaces),
+            ("11\n\nתיקון\nשגיאות נפוצות\n", self.open_Text_Cleaner_App),
+            ("12\n\nנקודותיים ורווח\n\n", self.open_replace_colons_and_spaces),
         ]
         
         buttons = []
@@ -2471,17 +2620,18 @@ class MainMenu(QWidget):
             buttons.append(button)
 
         # מיקום הלחצנים בתוך ה- Grid
-        grid_layout.addWidget(buttons[0], 0, 2)  # שורה 1, טור 1
+        grid_layout.addWidget(buttons[0], 0, 0)  # שורה 1, טור 1
         grid_layout.addWidget(buttons[1], 0, 1)  # שורה 1, טור 2
-        grid_layout.addWidget(buttons[2], 0, 0)  # שורה 1, טור 3
-        grid_layout.addWidget(buttons[3], 1, 2)  # שורה 2, טור 1
+        grid_layout.addWidget(buttons[2], 0, 2)  # שורה 1, טור 3
+        grid_layout.addWidget(buttons[3], 1, 0)  # שורה 2, טור 1
         grid_layout.addWidget(buttons[4], 1, 1)  # שורה 2, טור 2
-        grid_layout.addWidget(buttons[5], 1, 0)  # שורה 2, טור 3
-        grid_layout.addWidget(buttons[6], 2, 2)  # שורה 3, טור 1
+        grid_layout.addWidget(buttons[5], 1, 2)  # שורה 2, טור 3
+        grid_layout.addWidget(buttons[6], 2, 0)  # שורה 3, טור 1
         grid_layout.addWidget(buttons[7], 2, 1)  # שורה 3, טור 2
-        grid_layout.addWidget(buttons[8], 2, 0)  # שורה 3, טור 3
-        grid_layout.addWidget(buttons[9], 3, 2)  # שורה 4, טור 1-2 (ממוזג)
-        grid_layout.addWidget(buttons[10], 3, 1)  # שורה 4, טור 3
+        grid_layout.addWidget(buttons[8], 2, 2)  # שורה 3, טור 3
+        grid_layout.addWidget(buttons[9], 3, 0)  # שורה 4, טור 1
+        grid_layout.addWidget(buttons[10], 3, 1)  # שורה 4, טור 2
+        grid_layout.addWidget(buttons[11], 3, 2)  # שורה 4, טור 3
 
         # יצירת Layout מסוג VBox עבור כפתור "אודות התוכנה"
         main_layout = QVBoxLayout()
@@ -2542,7 +2692,11 @@ class MainMenu(QWidget):
     def open_Image_To_Html_App(self):
         self.Image_To_Html_App_window = ImageToHtmlApp()
         self.Image_To_Html_App_window.show()
-   
+
+    def open_Text_Cleaner_App(self):
+        self.Text_Cleaner_App_window = TextCleanerApp()
+        self.Text_Cleaner_App_window.show()
+
     def open_replace_colons_and_spaces(self):
         self.replace_colons_and_spaces_window = ReplaceColonsAndSpaces()
         self.replace_colons_and_spaces_window.show()
@@ -2558,6 +2712,7 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("אודות התוכנה")
+        self.setLayoutDirection(Qt.RightToLeft)
 
         layout = QVBoxLayout()
 
@@ -2566,12 +2721,12 @@ class AboutDialog(QDialog):
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
 
-        version_label = QLabel("גירסה: v3.1")
+        version_label = QLabel("גירסה: v3.2")
         version_label.setStyleSheet("font-size: 10pt;")
         version_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(version_label)
 
-        date_label = QLabel("תאריך: כו טבת תשפה")
+        date_label = QLabel("תאריך: כט שבט תשפה")
         date_label.setStyleSheet("font-size: 10pt;")
         date_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(date_label)
