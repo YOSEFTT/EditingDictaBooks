@@ -6,9 +6,9 @@
 לתשומת לב העורכים, כל השינויים בספרים צריכים להישמר באותו הרשיון המקורי של דיקטה.
 
 
-<div style="text-align: right;">
+<p align="right">
   <img src="https://github.com/user-attachments/assets/b6416435-effd-4295-9e79-cc74099b525b" alt="image">
-</div>
+</p>
 
 
 
