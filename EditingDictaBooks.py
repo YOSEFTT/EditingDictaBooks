@@ -3,18 +3,21 @@ import sys
 import ctypes
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QPushButton, QVBoxLayout, QLabel,
+    QApplication, QWidget, QPushButton, QVBoxLayout, QLabel, QMainWindow, QProgressBar,
     QLayout, QFileDialog, QLineEdit, QMessageBox, QComboBox, QHBoxLayout,
     QCheckBox, QTextEdit, QDialog, QFrame, QSplitter, QGridLayout, QSpacerItem, QSizePolicy
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPixmap, QCursor
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QDateTime
+from PyQt5.QtGui import QIcon, QPixmap, QCursor, QFont
 from PyQt5.QtWinExtras import QtWin
 from pyluach import gematria
 from bs4 import BeautifulSoup
 import gematriapy
 import re
 import os
+import os.path
+from pathlib import Path
+import requests
 import base64
 import urllib.request
 
@@ -361,6 +364,7 @@ class CreateSingleLetterHeaders(QWidget):
         ignore = self.ignore_entry.text().split()
         start = self.start_var.currentText()
         is_bold_checked = self.bold_var.isChecked()
+        
         if is_bold_checked:
             finde += "</b>"
             start = "<b>" + start
@@ -579,7 +583,12 @@ class AddPageNumberToHeading(QWidget):
                 file.writelines(updated_content)
             QMessageBox.information(self, "!מזל טוב", "ההחלפה הושלמה בהצלחה!")
         else:
-            QMessageBox.information(self, "!שים לב", "אין מה להחליף בקובץ זה")
+            msg = QMessageBox(self)
+            msg.setWindowTitle("!שים לב")
+            msg.setText("אין מה להחליף בקובץ זה")
+            QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
+            msg.show()
+            return
 
     def run_script(self):
         file_path = self.file_entry.text()
@@ -587,7 +596,13 @@ class AddPageNumberToHeading(QWidget):
             replace_with = self.replace_option.currentText()
             self.process_file(file_path, replace_with)
         else:
-            QMessageBox.warning(self, "קלט לא תקין", "אנא בחר קובץ או הזן נתיב")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)            
+            msg.setWindowTitle("קלט לא תקין")
+            msg.setText("נא לבחור קובץ תחילה")
+            QTimer.singleShot(1000, msg.close)  # סוגר את ההודעה לאחר 1000 מילי־שניות (1 שניות)
+            msg.show()
+            return
   
     # פונקציה לטעינת אייקון ממחרוזת Base64
     def load_icon_from_base64(self, base64_string):
@@ -667,7 +682,12 @@ class ChangeHeadingLevel(QWidget):
     def change_heading_level_func(self, file_path, current_level, new_level):
         file_path = self.file_entry.text()
         if not file_path:
-            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)            
+            msg.setWindowTitle("קלט לא תקין")
+            msg.setText("נא לבחור קובץ תחילה")
+            QTimer.singleShot(1000, msg.close)  # סוגר את ההודעה לאחר 1000 מילי־שניות (1 שניות)
+            msg.show()
             return
         # בדיקת סוג הקובץ לפי סיומת
         if not file_path.lower().endswith('.txt'):
@@ -682,7 +702,12 @@ class ChangeHeadingLevel(QWidget):
                 updated_content = re.sub(f"<{current_tag}>(.*?)</{current_tag}>", f"<{new_tag}>\\1</{new_tag}>", content, flags=re.DOTALL)
 
                 if content == updated_content:
-                    QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
+                    msg = QMessageBox(self)
+                    msg.setWindowTitle("!שים לב")
+                    msg.setText("אין מה להחליף בקובץ זה")
+                    QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
+                    msg.show()
+                    return
                 else:
                     with open(file_path, 'w', encoding='utf-8') as file:
                         file.write(updated_content)
@@ -831,8 +856,13 @@ class EmphasizeAndPunctuate(QWidget):
                     file.writelines(lines)
                 QMessageBox.information(self, "!מזל טוב", "השינויים נשמרו בהצלחה")
             else:
-                QMessageBox.information(self, "!שים לב", "אין מה לשנות בקובץ זה")
-
+                msg = QMessageBox(self)
+                msg.setWindowTitle("!שים לב")
+                msg.setText("אין מה להחליף בקובץ זה")
+                QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
+                msg.show()
+                return
+	
         except FileNotFoundError:
             QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
             return
@@ -1018,7 +1048,12 @@ class CreatePageBHeaders(QWidget):
 
             # הצגת הודעה מתאימה לפי כמות הכותרות שנוצרו
             if counter[0] == 0:
-                QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
+                msg = QMessageBox(self)
+                msg.setWindowTitle("!שים לב")
+                msg.setText("אין מה להחליף בקובץ זה")
+                QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
+                msg.show()
+                return
             else:
                 QMessageBox.information(self, "!מזל טוב", f"נוספו {counter[0]} כותרות לקובץ!")
         
@@ -1138,7 +1173,12 @@ class ReplacePageBHeaders(QWidget):
     def update_file(self, replace_type):
         file_path = self.file_entry.text()
         if not file_path:
-            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)            
+            msg.setWindowTitle("קלט לא תקין")
+            msg.setText("נא לבחור קובץ תחילה")
+            QTimer.singleShot(1000, msg.close)  # סוגר את ההודעה לאחר 1000 מילי־שניות (1 שניות)
+            msg.show()
             return
         # בדיקת סוג הקובץ לפי סיומת
         if not file_path.lower().endswith('.txt'):
@@ -1183,7 +1223,12 @@ class ReplacePageBHeaders(QWidget):
                 file.write(content)
 
             if replacements_made == 0:
-                QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
+                msg = QMessageBox(self)
+                msg.setWindowTitle("!שים לב")
+                msg.setText("אין מה להחליף בקובץ זה")
+                QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
+                msg.show()
+                return
             else:
                 QMessageBox.information(self, "!מזל טוב", f"הקובץ עודכן בהצלחה!\n\nבוצעו {replacements_made} החלפות")
         
@@ -1591,7 +1636,12 @@ class CheckHeadingErrorsOriginal(QWidget):
 
     def process_file(self, file_path):
         if not file_path:
-            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)            
+            msg.setWindowTitle("קלט לא תקין")
+            msg.setText("נא לבחור קובץ תחילה")
+            QTimer.singleShot(1000, msg.close)  # סוגר את ההודעה לאחר 1000 מילי־שניות (1 שניות)
+            msg.show()
             return
         # בדיקת סוג הקובץ לפי סיומת
         if not file_path.lower().endswith('.txt'):
@@ -1809,16 +1859,22 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
                     unmatched_tags.append(f"כותרת נוכחית - {current_tag}, כותרת הבאה - {next_tag}")
 
             # עיבוד התג האחרון
-            last_tages = (tags[-2].string or "", tags[-1].string or "")
+            if len(tags) >= 2:
+                last_tages = (tags[-2].string or "", tags[-1].string or "")
+            elif len(tags) == 1:
+                last_tages = ("", tags[-1].string or "")
+            else:
+                last_tages = ("", "")
+
             for last_tag in last_tages:
                 if last_tag and not re.match(pattern, last_tag):
                     unmatched_regex.append(last_tag)
 
-            last_heading_parts = last_tag.split()
+            last_heading_parts = last_tages[-1].split()
             if len(last_heading_parts) > 1:
                 last_heading = last_heading_parts[1]
             else:
-                last_heading = last_tag
+                last_heading = last_tages[-1]
 
             if gershayim:
                 if gematriapy.to_number(last_heading) <= 9:
@@ -2031,7 +2087,12 @@ class CheckHeadingErrorsCustom(QWidget):
 
     def process_file(self, file_path):
         if not file_path:
-            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)            
+            msg.setWindowTitle("קלט לא תקין")
+            msg.setText("נא לבחור קובץ תחילה")
+            QTimer.singleShot(1000, msg.close)  # סוגר את ההודעה לאחר 1000 מילי־שניות (1 שניות)
+            msg.show()
             return
         # בדיקת סוג הקובץ לפי סיומת
         if not file_path.lower().endswith('.txt'):
@@ -2332,15 +2393,15 @@ class TextCleanerApp(QWidget):
     def initUI(self):
         layout = QVBoxLayout()
         
-        filePathLayout = QHBoxLayout()
-        self.filePath = QLineEdit()
-        fileLabel = QLabel("נתיב קובץ:")
-        filePathLayout.addWidget(fileLabel)
-        filePathLayout.addWidget(self.filePath)
+        file_Path_Layout = QHBoxLayout()
+        self.file_Path = QLineEdit()
+        file_Label = QLabel("נתיב קובץ:")
+        file_Path_Layout.addWidget(file_Label)
+        file_Path_Layout.addWidget(self.file_Path)
 
-        layout.addLayout(filePathLayout)
+        layout.addLayout(file_Path_Layout)
         
-        self.loadBtn = QPushButton("טען קובץ")
+        self.loadBtn = QPushButton("עיון")
         self.loadBtn.clicked.connect(self.loadFile)
         layout.addWidget(self.loadBtn)
         
@@ -2383,20 +2444,26 @@ class TextCleanerApp(QWidget):
         self.resize(500, 400)
         self.originalText = ""
 
-    def cleanText(self, filePath):
-        filePath = self.filePath.text()
+    def cleanText(self, file_Path):
+        file_Path = self.file_Path.text()
  
-        if not filePath:
-            QMessageBox.critical(self, "קלט לא תקין", "לא נבחר קובץ!")
-            return
+        if not file_Path:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)            
+            msg.setWindowTitle("קלט לא תקין")
+            msg.setText("נא לבחור קובץ תחילה")
+            QTimer.singleShot(1000, msg.close)  # סוגר את ההודעה לאחר 1000 מילי־שניות (1 שניות)
+            msg.show()
+            return        
         
         # בדיקת סוג הקובץ לפי סיומת
-        if not self.filePath.text().endswith('.txt'):
+        if not file_Path.lower().endswith('.txt'):
+
             QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
-            return   
+            return
         
         try:
-            with open(self.filePath.text(), 'r', encoding='utf-8') as file:
+            with open(self.file_Path.text(), 'r', encoding='utf-8') as file:
                 text = file.read()
             
             self.originalText = text
@@ -2419,11 +2486,16 @@ class TextCleanerApp(QWidget):
             text = text.rstrip()  # מחיקת שורה אחרונה אם היא ריקה
 
             if text == self.originalText:
-                QMessageBox.information(self, "שינויי טקסט", "אין מה להחליף בקובץ זה.")
+                msg = QMessageBox(self)
+                msg.setWindowTitle("!שים לב")
+                msg.setText("אין מה להחליף בקובץ זה")
+                QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
+                msg.show()
+                return
             else:
-                with open(self.filePath.text(), 'w', encoding='utf-8') as file:
+                with open(self.file_Path.text(), 'w', encoding='utf-8') as file:
                     file.write(text)
-                QMessageBox.information(self, "שינויי טקסט", "השינויים בוצעו בהצלחה.")
+                QMessageBox.information(self, "!מזל טוב", "השינויים בוצעו בהצלחה")
 
         except FileNotFoundError:
             QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
@@ -2438,7 +2510,7 @@ class TextCleanerApp(QWidget):
         options = QFileDialog.Options()
         fileName, _ = QFileDialog.getOpenFileName(self, "בחר קובץ טקסט", "", "קבצי טקסט (*.txt);", options=options)
         if fileName:
-            self.filePath.setText(fileName)
+            self.file_Path.setText(fileName)
     
     def selectAll(self):
         for checkbox in self.checkBoxes.values():
@@ -2449,8 +2521,8 @@ class TextCleanerApp(QWidget):
             checkbox.setChecked(False)
     
     def undoChanges(self):
-        if self.filePath.text() and self.originalText:
-            with open(self.filePath.text(), 'w', encoding='utf-8') as file:
+        if self.file_Path.text() and self.originalText:
+            with open(self.file_Path.text(), 'w', encoding='utf-8') as file:
                 file.write(self.originalText)
 
     # פונקציה לטעינת אייקון ממחרוזת Base64
@@ -2460,90 +2532,521 @@ class TextCleanerApp(QWidget):
         return QIcon(pixmap)
 
 # ==========================================
-# Script 12: נקודותיים ורווח
+# Script 12: סנכרון ספרי דיקטה
 # ==========================================
 
-class ReplaceColonsAndSpaces(QWidget):
+# הגדרות גלובליות
+BASE_URL = "https://raw.githubusercontent.com/zevisvei/otzaria-library/refs/heads/main/"
+LOCAL_BOOKS_FOLDER = ""
+
+class SyncWorker(QThread):
+    """מחלקה לביצוע פעולות סנכרון ברקע"""
+    update_progress = pyqtSignal(str)
+    update_progress_bar = pyqtSignal(int, int)
+    finished_signal = pyqtSignal(bool, str)
+
+    def __init__(self, books_folder):
+        super().__init__()
+        self.books_folder = books_folder
+
+    def run(self):
+        try:
+            # בדיקה אם התיקייה קיימת
+            if not os.path.exists(self.books_folder):
+                self.finished_signal.emit(False, "התיקייה שנבחרה אינה קיימת")
+                return
+
+            # קבלת רשימת קבצים מקומית
+            list_local_files = []
+            for root, _, files in os.walk(self.books_folder):
+                for file in files:
+                    if not file.endswith(".txt"):
+                        continue
+                    rel_path = os.path.relpath(os.path.join(root, file), self.books_folder)
+                    list_local_files.append(rel_path)
+            
+            self.update_progress.emit(f"נמצאו {len(list_local_files)} קבצים מקומיים")
+            
+            # קבלת רשימת קבצים מ-GitHub
+            try:
+                response = requests.get(BASE_URL + "DictaToOtzaria/ספרים/לא ערוך/list.txt")
+                if response.status_code != 200:
+                    self.finished_signal.emit(False, f"שגיאה בקבלת רשימת קבצים מגיטהאב: {response.status_code}")
+                    return
+                list_from_github = response.text.splitlines()
+            except Exception as e:
+                self.finished_signal.emit(False, f"שגיאה בגישה לגיטהאב: {str(e)}")
+                return
+                
+            self.update_progress.emit(f"נמצאו {len(list_from_github)} קבצים בתיקייה שבגיטהאב")
+            
+            # התאמת שמות קבצים למערכת ההפעלה
+            list_all_per_os = [file.replace("/", os.sep) for file in list_from_github]
+            
+            # הורדת קבצים חדשים
+            files_to_download = [f for f in list_from_github if f.replace("/", os.sep) not in list_local_files]
+            self.update_progress.emit(f"מספר קבצים להורדה: {len(files_to_download)}")
+            
+            for i, file in enumerate(files_to_download):
+                self.update_progress_bar.emit(i+1, len(files_to_download))
+                file_name_per_os = file.replace("/", os.sep)
+                file_path = os.path.join(self.books_folder, file_name_per_os)
+                self.update_progress.emit(f"מוריד: {file}")
+                
+                # יצירת תיקיות נדרשות
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                
+                # הורדת הקובץ
+                try:
+                    response = requests.get(BASE_URL + f"DictaToOtzaria/ספרים/לא ערוך/אוצריא/{file}")
+                    if response.status_code != 200:
+                        self.update_progress.emit(f"שגיאה בהורדת הקובץ: {file}")
+                        continue
+                    
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(response.text)
+                except Exception as e:
+                    self.update_progress.emit(f"שגיאה בכתיבת הקובץ {file}: {str(e)}")
+            
+            # מחיקת קבצים שאינם בשרת
+            files_to_delete = [f for f in list_local_files if f not in list_all_per_os]
+            self.update_progress.emit(f"מספר קבצים למחיקה: {len(files_to_delete)}")
+            
+            for i, file in enumerate(files_to_delete):
+                self.update_progress_bar.emit(i+1, len(files_to_delete))
+                file_path = os.path.join(self.books_folder, file)
+                self.update_progress.emit(f"מוחק: {file}")
+                
+                try:
+                    os.remove(file_path)
+                except Exception as e:
+                    self.update_progress.emit(f"שגיאה במחיקת הקובץ {file}: {str(e)}")
+            
+            # מחיקת תיקיות ריקות
+            self.update_progress.emit("מנקה תיקיות ריקות...")
+            deleted_folders_count = 0
+            for root, dirs, _ in os.walk(self.books_folder, topdown=False):
+                for folder in dirs:
+                    folder_path = os.path.join(root, folder)
+                    try:                    
+                        if not os.listdir(folder_path):
+                            self.update_progress.emit(f"מוחק תיקייה ריקה: {folder_path}")
+                            os.rmdir(folder_path)
+                            deleted_folders_count += 1
+                    except OSError as e:
+                         self.update_progress.emit(f"שגיאה במחיקת תיקייה {folder_path}: {str(e)}")
+            if deleted_folders_count > 0:
+                self.update_progress.emit(f"נמחקו {deleted_folders_count} תיקיות ריקות")
+
+            self.finished_signal.emit(True, "הסנכרון הושלם בהצלחה")
+        
+        except Exception as e:
+            import traceback
+            self.update_progress.emit(f"שגיאה קריטית בתהליך הסנכרון: {str(e)}")
+            self.update_progress.emit(traceback.format_exc()) # הדפסת Traceback ללוג לדיבוג
+            self.finished_signal.emit(False, f"שגיאה בתהליך הסנכרון: {str(e)}")
+            self.update_progress_bar.emit(0, 1)  # עדכון פס ההתקדמות למצב סופי
+            self.update_progress.emit("הסנכרון נכשל. יש לבדוק את הלוג לפרטים נוספים")
+
+class CompareWorker(QThread):
+    """מחלקה לביצוע פעולות השוואה ברקע"""
+    update_progress = pyqtSignal(str)
+    finished_signal = pyqtSignal(list, list)
+
+    def __init__(self, books_folder):
+        super().__init__()
+        self.books_folder = books_folder
+
+    def run(self):
+        try:
+            # קבלת רשימת קבצים מקומית
+            list_local_files = []
+            if os.path.exists(self.books_folder):
+                for root, _, files in os.walk(self.books_folder):
+                    for file in files:
+                        if not file.endswith(".txt"):
+                            continue
+                        rel_path = os.path.relpath(os.path.join(root, file), self.books_folder)
+                        list_local_files.append(rel_path)
+            
+            self.update_progress.emit(f"נמצאו {len(list_local_files)} קבצים מקומיים")
+            
+            # קבלת רשימת קבצים מ-GitHub
+            try:
+                response = requests.get(BASE_URL + "DictaToOtzaria/ספרים/לא ערוך/list.txt")
+                if response.status_code != 200:
+                    self.update_progress.emit(f"שגיאה בקבלת רשימת קבצים מגיטהאב: {response.status_code}")
+                    return
+                list_from_github = response.text.splitlines()
+            except Exception as e:
+                self.update_progress.emit(f"שגיאה בגישה לגיטהאב: {str(e)}")
+                return
+                
+            self.update_progress.emit(f"נמצאו {len(list_from_github)} קבצים בתיקייה שבגיטהאב")
+            
+            # התאמת שמות קבצים למערכת ההפעלה
+            list_all_per_os = [file.replace("/", os.sep) for file in list_from_github]
+            
+            # קבצים חדשים להורדה
+            files_to_download = [f.replace("/", os.sep) for f in list_from_github if f.replace("/", os.sep) not in list_local_files]
+            
+            # קבצים מקומיים שאינם בשרת
+            files_to_delete = [f for f in list_local_files if f not in list_all_per_os]
+            
+            self.finished_signal.emit(files_to_download, files_to_delete)
+            
+        except Exception as e:
+            self.update_progress.emit(f"שגיאה בתהליך ההשוואה: {str(e)}")
+            self.finished_signal.emit([], [])
+
+
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("נקודותיים ורווח")
-        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
-        self.setGeometry(100, 100, 550, 150)
+        self.books_folder = LOCAL_BOOKS_FOLDER
+        self.log_file = "sync_log.txt"  # קובץ לוג ברירת מחדל
         self.init_ui()
+        self.init_logger()  # אתחול מערכת הלוג
+        self.apply_styles()  # החלת העיצוב
 
+    
     def init_ui(self):
-        layout = QVBoxLayout()
-
-        label = QLabel("תוכנה זו מחליפה את התווים - נקודותיים ורווח, בנקודותיים ואנטר\nתוכנה זו כבר לא אקטואלית למי שמשתמש בגירסה 4.4 ואילך של ספרי דיקטה")
-        label.setAlignment(Qt.AlignCenter)
-        label.setStyleSheet("font-size: 20px;")
-        layout.addWidget(label)
-
-        # נתיב קובץ
-        file_layout = QHBoxLayout()
-        browse_button = QPushButton("עיון")
-        browse_button.setStyleSheet("font-size: 20px;")
-        browse_button.clicked.connect(self.select_file)
-        self.file_path_entry = QLineEdit()
-        file_label = QLabel("נתיב קובץ:")
-        file_label.setStyleSheet("font-size: 20px;")
-        file_layout.addWidget(browse_button)
-        file_layout.addWidget(self.file_path_entry)
-        file_layout.addWidget(file_label)
-        layout.addLayout(file_layout)
-
-        # כפתור הפעלה
-        run_button = QPushButton("הפעל")
-        run_button.clicked.connect(self.run_processing)
-        run_button.setFixedHeight(40)
-        run_button.setStyleSheet("font-size: 25px;")
-        layout.addWidget(run_button)
-
-        self.setLayout(layout)
-
-    def select_file(self):
-        options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "בחר קובץ טקסט", "", "קבצי טקסט (*.txt);;כל הפורמטים (*.*)", options=options
-        )
-        if file_path:
-            self.file_path_entry.setText(file_path)
-
-    def run_processing(self):
-        file_path = self.file_path_entry.text()
-        if not file_path:
-            QMessageBox.warning(self, "קלט לא תקין", "לא נבחר קובץ!")
-            return
-        # בדיקת סוג הקובץ לפי סיומת
-        if not file_path.lower().endswith('.txt'):
-            QMessageBox.critical(self, "קלט לא תקין", "סוג הקובץ אינו נתמך\nבחר קובץ טקסט [בסיומת TXT.]")
-            return      
-
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-
-            # שלב 1: החלפת רצפים של רווחים באנטר בלבד
-            new_content = re.sub(r' {1,5}\n', '\n', content)
-
-            # שלב 2: החלפת נקודותיים ורווח בנקודותיים ואנטר
-            new_content = re.sub(r':\s', ':\n', new_content)
-
-            if content == new_content:
-                QMessageBox.information(self, "!שים לב", "לא נמצא מה להחליף")
-            else:
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(new_content)
-                QMessageBox.information(self, "!מזל טוב", "ההחלפה הושלמה בהצלחה!")
+        # הגדרת החלון הראשי
+        self.setWindowTitle("סנכרון ספרי דיקטה לאוצריא")
+        self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setMinimumSize(800, 600)
+        self.setGeometry(100, 100, 800, 600)
+        self.setLayoutDirection(Qt.RightToLeft)
         
-        except FileNotFoundError:
-            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
-            return
-        except UnicodeDecodeError:
-            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
-            return   
+        # יצירת ווידג'ט מרכזי
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        
+        # יצירת הפריסה הראשית
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)  # הוספת שוליים
+        main_layout.setSpacing(15)  # הוספת ריווח בין אלמנטים
+
+        # תווית לתיקייה נבחרת
+        folder_layout = QHBoxLayout()
+        folder_layout.setSpacing(10)
+        self.folder_label = QLabel("תיקייה נבחרת: לא נבחרה")
+        folder_layout.addWidget(self.folder_label)
+        
+        # כפתור בחירת תיקייה
+        self.select_folder_btn = QPushButton("בחר תיקייה")
+        self.select_folder_btn.clicked.connect(self.select_folder)
+        folder_layout.addWidget(self.select_folder_btn)
+        
+        main_layout.addLayout(folder_layout)
+        
+        # כפתורי פעולה
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setSpacing(15)  # מרווח בין הכפתורים
+        
+        self.compare_btn = QPushButton("השווה")
+        self.compare_btn.clicked.connect(self.compare_files)
+        buttons_layout.addWidget(self.compare_btn)
+        
+        self.sync_btn = QPushButton("סנכרן")
+        self.sync_btn.clicked.connect(self.sync_files)
+        buttons_layout.addWidget(self.sync_btn)
+        
+        main_layout.addLayout(buttons_layout)
+        main_layout.addSpacing(10)  # מרווח לפני אזור הפלט
+
+        # כותרת לאזור הפלט
+        output_label = QLabel("לוג פעולות:")
+        main_layout.addWidget(output_label)
+        
+        # אזור פלט
+        self.log_output = QTextEdit()
+        self.log_output.setReadOnly(True)
+        main_layout.addWidget(self.log_output)
+        
+        # פס התקדמות
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setMinimumHeight(20)  # גובה מינימלי
+        main_layout.addWidget(self.progress_bar)
+        
+        # מצב ראשוני של הכפתורים
+        self.update_button_states()
+
+    def apply_styles(self):
+        """החלת עיצוב מודרני על הממשק"""
+        # הגדרת גופן ברירת מחדל
+        app = QApplication.instance()
+        font = QFont("Arial", 10)
+        app.setFont(font)
+        
+        # עיצוב כללי
+        style_sheet = """
+        QMainWindow {
+            background-color: #f5f5f5;
+        }
+        
+        QWidget {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        QPushButton {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            font-weight: bold;
+            min-width: 100px;
+        }
+        
+        QPushButton:hover {
+            background-color: #2980b9;
+        }
+        
+        QPushButton:disabled {
+            background-color: #bdc3c7;
+        }
+        
+        QLabel {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        QTextEdit {
+            background-color: white;
+            border: 1px solid #dcdde1;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        
+        QProgressBar {
+            border-radius: 5px;
+            background-color: #ecf0f1;
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        QProgressBar::chunk {
+            background-color: #2ecc71;
+            border-radius: 5px;
+        }
+        
+        QFileDialog {
+            background-color: #f5f5f5;
+        }
+        
+        QMessageBox {
+            background-color: #f5f5f5;
+        }
+        
+        QMessageBox QPushButton {
+            min-width: 80px;
+            min-height: 30px;
+        }
+        """
+        
+        self.setStyleSheet(style_sheet)
+        
+        # עיצוב ספציפי לכפתורים
+        self.select_folder_btn.setIcon(QIcon.fromTheme("folder-open"))
+        self.compare_btn.setIcon(QIcon.fromTheme("view-refresh"))
+        self.sync_btn.setIcon(QIcon.fromTheme("emblem-synchronizing"))
+        
+        # הוספת צללית או אפקט תלת-ממדי לכפתורים
+        for btn in [self.select_folder_btn, self.compare_btn, self.sync_btn]:
+            btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #3498db;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 10px 20px;
+                    font-weight: bold;
+                    min-width: 120px;
+                }
+                QPushButton:hover {
+                    background-color: #2980b9;
+                }
+                QPushButton:pressed {
+                    background-color: #1c6ea4;
+                    padding-top: 11px;
+                    padding-bottom: 9px;
+                }
+                QPushButton:disabled {
+                    background-color: #bdc3c7;
+                }
+            """)
+
+    def init_logger(self):
+        """אתחול מערכת רישום הלוג"""
+        # קבלת תיקיית המשתמש בצורה תואמת למערכת ההפעלה
+        user_home = str(Path.home())
+        self.log_file = os.path.join(user_home, "sync_log.txt")
+        self.log(f"לוג יישמר בקובץ: {self.log_file}")
+
+    
+    def log(self, message):
+        """הוספת הודעה לאזור הפלט"""
+        self.log_output.append(message)
+                
+        # כתיבה לקובץ לוג
+        timestamp = QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss")
+        log_message = f"{timestamp}: {message}"
+   
+        try:
+            with open(self.log_file, "a", encoding="utf-8") as f:
+                f.write(log_message + "\n")
         except Exception as e:
-            QMessageBox.critical(self, "שגיאה", f"ארעה שגיאה במהלך העיבוד: {str(e)}")
+            self.log_output.append(f"שגיאה בכתיבה לקובץ לוג: {str(e)}")
+    
+    def select_folder(self):
+        """בחירת תיקיית ספרים מקומית"""
+        folder = QFileDialog.getExistingDirectory(self, "בחר תיקיית ספרים")
+        if folder:
+            self.books_folder = folder
+            self.folder_label.setText(f"תיקייה נבחרת: {folder}")
+            self.log(f"נבחרה תיקייה: {folder}")
+            self.update_button_states()
+    
+    def update_button_states(self):
+        """עדכון מצב הכפתורים בהתאם לבחירת תיקייה"""
+        has_folder = bool(self.books_folder)
+        self.compare_btn.setEnabled(has_folder)
+        self.sync_btn.setEnabled(has_folder)
+    
+    def compare_files(self):
+        """השוואת קבצים בין התיקייה המקומית לשרת"""
+        if not self.books_folder:
+            QMessageBox.warning(self, "שגיאה", "יש לבחור תיקייה תחילה")
+            return
+        
+        self.log("מתחיל השוואת קבצים...")
+        self.compare_btn.setEnabled(False)
+        self.sync_btn.setEnabled(False)
+        
+        # הרצת תהליך ההשוואה בתהליך נפרד
+        self.compare_worker = CompareWorker(self.books_folder)
+        self.compare_worker.update_progress.connect(self.log)
+        self.compare_worker.finished_signal.connect(self.compare_finished)
+        self.compare_worker.start()
+    
+    def compare_finished(self, files_to_download, files_to_delete):
+        """טיפול בתוצאות ההשוואה"""
+        self.log("\n=== תוצאות ההשוואה ===")
+        
+        # הצגת קבצים להורדה
+        self.log(f"\nקבצים להורדה ({len(files_to_download)}):")
+        for file in files_to_download[:10]:  # הצגת 10 הראשונים
+            self.log(f"- {file}")
+        if len(files_to_download) > 10:
+            self.log(f"...ועוד {len(files_to_download) - 10} קבצים נוספים")
+        
+        # הצגת קבצים למחיקה
+        self.log(f"\nקבצים למחיקה ({len(files_to_delete)}):")
+        for file in files_to_delete[:10]:  # הצגת 10 הראשונים
+            self.log(f"- {file}")
+        if len(files_to_delete) > 10:
+            self.log(f"...ועוד {len(files_to_delete) - 10} קבצים נוספים")
+        
+        self.log("\nההשוואה הושלמה")
+        self.compare_btn.setEnabled(True)
+        self.sync_btn.setEnabled(True)
+    
+    def sync_files(self):
+        """סנכרון קבצים בין התיקייה המקומית לשרת"""
+        if not self.books_folder:
+            QMessageBox.warning(self, "שגיאה", "יש לבחור תיקייה תחילה")
+            return
+        
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("אישור סנכרון")
+        msg_box.setText("האם אתה בטוח שברצונך לסנכרן את הספרים? פעולה זו תוריד קבצים חדשים שנוספו לתיקיי', וכן תמחק קבצים שנמחקו ממנה.\nשים לב! פעולה זו אינה הפיכה")
+        msg_box.setIcon(QMessageBox.Question)
+
+        # הגדרת הכפתורים בעברית
+        yes_button = msg_box.addButton("כן", QMessageBox.YesRole)
+        no_button = msg_box.addButton("לא", QMessageBox.NoRole)
+        msg_box.setDefaultButton(yes_button)
+
+        yes_button.setStyleSheet("""
+            QPushButton {
+                background-color: #5dade2; /* צבע רקע מעט שונה */
+                color: white;
+                border: 2px solid #3498db; /* גבול כחול בולט */
+                border-radius: 5px;
+                padding: 5px 10px;
+                font-weight: bold; /* טקסט מודגש */
+                min-width: 80px;
+                min-height: 30px;
+            }
+            QPushButton:hover {
+                background-color: #3498db; /* מעט כהה יותר במעבר עכבר */
+            }
+            QPushButton:pressed {
+                background-color: #2980b9; /* עוד יותר כהה בלחיצה */
+            }
+        """)
+        # ודא שהכפתור השני נשאר עם העיצוב הסטנדרטי של QMessageBox
+        no_button.setStyleSheet("""
+            QPushButton {
+                /* אפשר להשאיר ריק כדי שיקבל את ה-CSS מ-QMessageBox QPushButton */
+                /* או להגדיר במפורש את הסגנון הרגיל אם צריך */
+                 background-color: #ebebeb; /* דוגמה לצבע רגיל */
+                 color: black;
+                 border: 1px solid #cccccc;
+                 border-radius: 5px;
+                 padding: 5px 10px;
+                 font-weight: normal;
+                 min-width: 80px;
+                 min-height: 30px;                 
+            }
+            QPushButton:hover { background-color: #f5f5f5; }
+            QPushButton:pressed { background-color: #dddddd; }
+        """)
+
+        msg_box.exec_()
+
+        # בדיקה איזה כפתור נלחץ
+        if msg_box.clickedButton() == yes_button:
+            self.log("מתחיל סנכרון קבצים...")
+            self.compare_btn.setEnabled(False)
+            self.sync_btn.setEnabled(False)
+            self.progress_bar.setVisible(True)
+            
+            # הרצת תהליך הסנכרון בתהליך נפרד
+            self.sync_worker = SyncWorker(self.books_folder)
+            self.sync_worker.update_progress.connect(self.log)
+            self.sync_worker.update_progress_bar.connect(self.update_progress)
+            self.sync_worker.finished_signal.connect(self.sync_finished)
+            self.sync_worker.start()
+        else:
+            # אם נלחץ על "לא", לא עושים כלום
+            self.log("בוטל סנכרון קבצים")
+            return
+
+    def update_progress(self, current, total):
+        """עדכון פס ההתקדמות"""
+        self.progress_bar.setMaximum(total)
+        self.progress_bar.setValue(current)
+    
+    def sync_finished(self, success, message):
+        """טיפול בסיום הסנכרון"""
+        self.log(message)
+        
+        if success:
+            msg = QMessageBox(self)  
+            msg.setIcon(QMessageBox.Information)        
+            msg.setWindowTitle("סנכרון הושלם")
+            msg.setText("הסנכרון הושלם בהצלחה")
+            QTimer.singleShot(3000, msg.close)  # סוגר את ההודעה לאחר 3000 מילי־שניות (3 שניות)
+            msg.show()
+        else:
+            QMessageBox.warning(self, "שגיאה בסנכרון", message)
+        
+        self.progress_bar.setVisible(False)
+        self.compare_btn.setEnabled(True)
+        self.sync_btn.setEnabled(True)
 
     # פונקציה לטעינת אייקון ממחרוזת Base64
     def load_icon_from_base64(self, base64_string):
@@ -2591,7 +3094,7 @@ class MainMenu(QWidget):
             ("9\n\nבדיקת שגיאות\nלספרים על השס\n", self.open_check_heading_errors_custom),
             ("10\n\nהמרת תמונה\nלטקסט\n", self.open_Image_To_Html_App),
             ("11\n\nתיקון\nשגיאות נפוצות\n", self.open_Text_Cleaner_App),
-            ("12\n\nנקודותיים ורווח\n\n", self.open_replace_colons_and_spaces),
+            ("12\n\nסנכרון\nספרי דיקטה\n", self.open_Main_Window),
         ]
         
         buttons = []
@@ -2697,9 +3200,9 @@ class MainMenu(QWidget):
         self.Text_Cleaner_App_window = TextCleanerApp()
         self.Text_Cleaner_App_window.show()
 
-    def open_replace_colons_and_spaces(self):
-        self.replace_colons_and_spaces_window = ReplaceColonsAndSpaces()
-        self.replace_colons_and_spaces_window.show()
+    def open_Main_Window(self):
+        self.Main_Window_window = MainWindow()
+        self.Main_Window_window.show()
    
     # פונקציה לטעינת אייקון ממחרוזת Base64
     def load_icon_from_base64(self, base64_string):
