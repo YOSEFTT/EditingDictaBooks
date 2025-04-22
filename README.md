@@ -7,10 +7,13 @@
 
 
 <p align="right">
-  <img src="https://github.com/user-attachments/assets/b6416435-effd-4295-9e79-cc74099b525b" alt="image">
+  <img src="https://github.com/user-attachments/assets/10b07dbe-cba1-4308-84d2-061e4cdfed28" alt="image">
 </p>
 
 
+# הורדת התוכנות
+הורד את קובץ הפייתון בשם: [EditingDictaBooks.py](https://github.com/YOSEFTT/EditingDictaBooks/blob/main/EditingDictaBooks.py)
+או הורד את התוכנה [מכאן:](https://github.com/YOSEFTT/EditingDictaBooks/releases)
 
 # תרומת קוד
 תרומות קוד יתקבלו בברכה גדולה! אנא פתחו Pull Request עם השינויים שלכם.
