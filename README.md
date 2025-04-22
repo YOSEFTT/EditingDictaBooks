@@ -13,7 +13,7 @@
 
 # הורדת התוכנות
 הורד את קובץ הפייתון בשם: [EditingDictaBooks.py](https://github.com/YOSEFTT/EditingDictaBooks/blob/main/EditingDictaBooks.py)
-או הורד את התוכנה [מכאן:](https://github.com/YOSEFTT/EditingDictaBooks/releases)
+או הורד את התוכנה [מכאן](https://github.com/YOSEFTT/EditingDictaBooks/releases)
 
 # תרומת קוד
 תרומות קוד יתקבלו בברכה גדולה! אנא פתחו Pull Request עם השינויים שלכם.
