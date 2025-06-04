@@ -14,11 +14,12 @@ from PyQt5.QtGui import (
     QTextBlock, QTextList, QTextCursor,)
 from PyQt5.QtWinExtras import QtWin
 from PyQt5.QtCore import (
-    Qt, QDateTime, QThread, pyqtSignal, QTimer,
+    Qt, QDateTime, QThread, pyqtSignal, QTimer, QObject, QEvent,
     QPropertyAnimation, QEasingCurve, QRegExp, QLocale,)
+import win32con
+import win32gui
 import sys
 import ctypes
-import subprocess
 import re
 import os
 import requests
@@ -28,12 +29,16 @@ import urllib.request
 import time
 import gematriapy
 import os.path
+import traceback
+import certifi
+import win32api
 import ssl
 import requests.adapters
-import certifi
 import logging
-import traceback
 import json
+import subprocess
+from pyluach import dates
+from datetime import datetime
 from pathlib import Path
 from pyluach import gematria
 from bs4 import BeautifulSoup
@@ -50,9 +55,22 @@ VERSION = "3.5.0"
 # מזהה ייחודי לאפליקציה
 myappid = 'MIT.LEARN_PYQT.dictatootzaria'
 
-# מחרוזת Base64 של האייקון (החלף את זה עם המחרוזת שתקבל אחרי המרת הקובץ שלך ל־Base64)
+# מחרוזת Base64 של האייקון
 icon_base64 = "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"
 
+class EnterKeyFilter(QObject):
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.KeyPress and event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            if isinstance(obj, QPushButton) and obj.hasFocus():
+                obj.click()
+                return True
+            elif isinstance(obj, QComboBox) and obj.hasFocus():
+                # נפעיל את האירוע של בחירת הפריט הנוכחי
+                if not obj.view().isVisible():
+                    obj.showPopup()
+                    return True
+        return super().eventFilter(obj, event)
+    
 # ==========================================
 # Script 1: יצירת כותרות לאוצריא
 # ==========================================
@@ -62,7 +80,8 @@ class CreateHeadersOtZria(QWidget):
         super().__init__()
         self.setWindowTitle("יצירת כותרות לאוצריא")
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
-        self.setGeometry(100, 100, 600, 300)
+        self.setGeometry(100, 100, 1150, 400)
+        self.setContentsMargins(30, 30, 30, 30)  # הוספת שוליים
         self.init_ui()
 
     def init_ui(self):
@@ -76,35 +95,33 @@ class CreateHeadersOtZria(QWidget):
         self.file_entry = QLineEdit()
         file_label = QLabel("נתיב קובץ:")
         file_label.setStyleSheet("font-size: 20px;")
-        file_layout.addWidget(browse_button)
-        file_layout.addWidget(self.file_entry)
         file_layout.addWidget(file_label)
+        file_layout.addWidget(self.file_entry)
+        file_layout.addWidget(browse_button)
         layout.addLayout(file_layout)
 
         # מילה לחיפוש
         search_layout = QHBoxLayout()
         search_label = QLabel("מילה לחפש:")
-        search_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        search_label.setStyleSheet("font-size: 20px;")
+        search_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        search_label.setStyleSheet("font-size: 26px;")
         self.level_var = QComboBox()
-        self.level_var.setLayoutDirection(Qt.RightToLeft)
-        self.level_var.setStyleSheet("font-size: 20px;")
+        self.level_var.setStyleSheet("font-size: 26px;")
         self.level_var.setFixedSize(150, 40)  # רוחב: 150 פיקסלים, גובה: 40 פיקסלים
-        self.level_var.setLayoutDirection(Qt.RightToLeft)
         search_choices = ["דף", "עמוד", "פרק", "פסוק", "שאלה", "סימן", "סעיף", "הלכה", "הלכות", "סק", "ענף"]
         self.level_var.addItems(search_choices)
         self.level_var.setEditable(True)  # מאפשר להקליד
-        search_layout.addWidget(self.level_var)
         search_layout.addWidget(search_label)
+        search_layout.addWidget(self.level_var, alignment=Qt.AlignLeft | Qt.AlignVCenter)
        
         layout.addLayout(search_layout)
 
         # הסבר למשתמש
         explanation = QLabel(
-            "בתיבת 'מילה לחפש' יש לבחור או להקליד את המילה בה אנו רוצים שתתחיל הכותרת.\nלדוג': פרק/פסוק/סימן/סעיף/הלכה/שאלה/עמוד/סק\n\nשים לב!\nאין להקליד רווח אחרי המילה, וכן אין להקליד את התו גרש (') או גרשיים (\"), וכן אין להקליד יותר ממילה אחת\n"
+            "בתיבת 'מילה לחפש' יש לבחור או להקליד את המילה בה אנו רוצים שתתחיל הכותרת.\nלדוג': פרק/פסוק/סימן/סעיף/הלכה/שאלה/עמוד/סק/ענף\n\nשים לב!\nאין להקליד רווח אחרי המילה, וכן אין להקליד את התו גרש (') או גרשיים (\"), וכן אין להקליד יותר ממילה אחת\n"
         )
         explanation.setAlignment(Qt.AlignCenter)
-        explanation.setStyleSheet("font-size: 21px;")
+        explanation.setStyleSheet("font-size: 20px;")
         explanation.setWordWrap(True)
         layout.addWidget(explanation)
 
@@ -115,23 +132,22 @@ class CreateHeadersOtZria(QWidget):
         self.end_var.addItems([str(i) for i in range(1, 1000)])
         self.end_var.setCurrentText("999")
         self.end_var.setFixedWidth(65)
-        end_layout.addWidget(self.end_var)
         end_layout.addWidget(end_label)
+        end_layout.addWidget(self.end_var)
         layout.addLayout(end_layout)
 
         # רמת כותרת
         heading_layout = QHBoxLayout()
         self.heading_label = QLabel("רמת כותרת:")
         self.heading_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.heading_label.setStyleSheet("font-size: 20px;")
+        self.heading_label.setStyleSheet("font-size: 26px;")
         self.heading_level_var = QComboBox()
-        self.heading_level_var.setStyleSheet("font-size: 20px;")
         self.heading_level_var.addItems([str(i) for i in range(2, 7)])
         self.heading_level_var.setCurrentText("2")
-        self.heading_level_var.setStyleSheet("font-size: 20px;")
+        self.heading_level_var.setStyleSheet("font-size: 26px;")
         self.heading_level_var.setFixedWidth(50)
-        heading_layout.addWidget(self.heading_level_var, alignment=Qt.AlignRight)
         heading_layout.addWidget(self.heading_label)
+        heading_layout.addWidget(self.heading_level_var, alignment=Qt.AlignLeft | Qt.AlignVCenter)
         layout.addLayout(heading_layout)
            
         # כפתור הפעלה
@@ -269,11 +285,12 @@ class CreateSingleLetterHeaders(QWidget):
         super().__init__()
         self.setWindowTitle("יצירת כותרות לאותיות בודדות")
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
-        self.setGeometry(100, 100, 650, 300)
+        self.setGeometry(100, 100, 1100, 330)
+        self.setContentsMargins(30, 30, 30, 30)  # הוספת שוליים
+        self.setLayoutDirection(Qt.RightToLeft)  # הגדרת כיוון ימין לשמאל
         self.init_ui()
 
     def init_ui(self):
-        self.setLayoutDirection(Qt.RightToLeft)  # הגדרת כיוון ימין לשמאל
         layout = QVBoxLayout()
 
         # נתיב קובץ
@@ -324,7 +341,7 @@ class CreateSingleLetterHeaders(QWidget):
         heading_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         heading_label.setStyleSheet("font-size: 20px;")
         self.level_var = QComboBox()
-        self.level_var.setFixedWidth(50)
+        self.level_var.setFixedWidth(45)
         self.level_var.setStyleSheet("font-size: 20px;")
         self.level_var.addItems([str(i) for i in range(2, 7)])
         self.level_var.setCurrentText("3")
@@ -474,6 +491,10 @@ class AddPageNumberToHeading(QWidget):
         super().__init__()
         self.setWindowTitle("הוספת מספר עמוד בכותרת הדף")
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setLayoutDirection(Qt.RightToLeft)
+        self.setGeometry(100, 100, 1100, 400)
+        self.setContentsMargins(40, 40, 40, 40)  # הוספת שוליים
+
         self.init_ui()
 
     def init_ui(self):
@@ -499,9 +520,10 @@ class AddPageNumberToHeading(QWidget):
         browse_button = QPushButton("עיון")
         browse_button.setStyleSheet("font-size: 20px;")
         browse_button.clicked.connect(self.browse_file)
-        file_layout.addWidget(browse_button)
-        file_layout.addWidget(self.file_entry)
         file_layout.addWidget(file_label)
+        file_layout.addWidget(self.file_entry)
+        file_layout.addWidget(browse_button)
+        self.file_entry.setStyleSheet("font-size: 20px;")
         layout.addLayout(file_layout)
 
         # סוג ההחלפה
@@ -513,8 +535,8 @@ class AddPageNumberToHeading(QWidget):
         self.replace_option.setStyleSheet("font-size: 20px;")
         self.replace_option.addItems(["נקודה ונקודותיים", "ע\"א וע\"ב"])
         self.replace_option.setFixedWidth(180)
-        heading_layout.addWidget(self.replace_option, alignment=Qt.AlignRight)
         heading_layout.addWidget(replacement_label)
+        heading_layout.addWidget(self.replace_option, alignment=Qt.AlignLeft | Qt.AlignVCenter)
        
         layout.addLayout(heading_layout)
 
@@ -646,8 +668,10 @@ class ChangeHeadingLevel(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("שינוי רמת כותרת")
-        self.setGeometry(100, 100, 550, 250)
+        self.setGeometry(100, 100, 950, 300)
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setLayoutDirection(Qt.RightToLeft)
+        self.setContentsMargins(30, 30, 30, 30)  # הוספת שוליים
         self.init_ui()
 
     def init_ui(self):
@@ -661,9 +685,10 @@ class ChangeHeadingLevel(QWidget):
         self.file_entry = QLineEdit()
         file_label = QLabel("נתיב קובץ:")
         file_label.setStyleSheet("font-size: 20px;")
-        file_layout.addWidget(browse_button)
+        self.file_entry.setStyleSheet("font-size: 20px;")   
+        file_layout.addWidget(file_label) 
         file_layout.addWidget(self.file_entry)
-        file_layout.addWidget(file_label)
+        file_layout.addWidget(browse_button)
         layout.addLayout(file_layout)
 
         # רמת כותרת נוכחית
@@ -675,20 +700,21 @@ class ChangeHeadingLevel(QWidget):
         self.current_level_var.setStyleSheet("font-size: 20px;")
         self.current_level_var.setFixedWidth(50)
         self.current_level_var.addItems([str(i) for i in range(1, 10)])
-        current_level_layout.addWidget(self.current_level_var, alignment=Qt.AlignRight)
         current_level_layout.addWidget(current_level_label)
+        current_level_layout.addWidget(self.current_level_var, alignment=Qt.AlignLeft | Qt.AlignVCenter)
         layout.addLayout(current_level_layout)
 
         # רמת כותרת חדשה
         new_level_layout = QHBoxLayout()
         new_level_label = QLabel("רמת כותרת חדשה: (לדוגמא: 3)")
+        new_level_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         new_level_label.setStyleSheet("font-size: 20px;")
         self.new_level_var = QComboBox()
         self.new_level_var.setStyleSheet("font-size: 20px;")
-        self.current_level_var.setFixedWidth(50)
+        self.new_level_var.setFixedWidth(50)
         self.new_level_var.addItems([str(i) for i in range(1, 10)])
-        new_level_layout.addWidget(self.new_level_var, alignment=Qt.AlignRight)
         new_level_layout.addWidget(new_level_label)
+        new_level_layout.addWidget(self.new_level_var, alignment=Qt.AlignLeft | Qt.AlignVCenter)
         layout.addLayout(new_level_layout)
 
         # כפתור הפעלה
@@ -775,8 +801,11 @@ class EmphasizeAndPunctuate(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("הדגשה וניקוד")
-        self.setGeometry(100, 100, 550, 250)
+        self.setGeometry(100, 100, 900, 300)
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setLayoutDirection(Qt.RightToLeft)
+        self.setContentsMargins(40, 40, 40, 40)  # הוספת שוליים
+        self.setStyleSheet("font-size: 20px;")
         self.init_ui()
 
     def init_ui(self):
@@ -790,9 +819,9 @@ class EmphasizeAndPunctuate(QWidget):
         self.file_path_entry = QLineEdit()
         file_label = QLabel("נתיב קובץ:")
         file_label.setStyleSheet("font-size: 20px;")
-        file_layout.addWidget(browse_button)
-        file_layout.addWidget(self.file_path_entry)
         file_layout.addWidget(file_label)
+        file_layout.addWidget(self.file_path_entry)
+        file_layout.addWidget(browse_button)
         layout.addLayout(file_layout)
        
         # בחירה להוספת נקודה או נקודותיים
@@ -804,8 +833,8 @@ class EmphasizeAndPunctuate(QWidget):
         self.ending_var.setStyleSheet("font-size: 20px;")
         self.ending_var.addItems(["הוסף נקודותיים", "הוסף נקודה", "ללא שינוי"])
         self.ending_var.setFixedWidth(170)
-        ending_layout.addWidget(self.ending_var, alignment=Qt.AlignRight)  # הוספת תיבת הבחירה קודם
-        ending_layout.addWidget(ending_label)  # הוספת התווית אחר כך
+        ending_layout.addWidget(ending_label)
+        ending_layout.addWidget(self.ending_var, alignment=Qt.AlignLeft | Qt.AlignVCenter)
 
         layout.addLayout(ending_layout)
 
@@ -923,8 +952,10 @@ class CreatePageBHeaders(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("'יצירת כותרות ל'עמוד ב")
-        self.setGeometry(100, 100, 550, 300)
+        self.setGeometry(100, 100, 800, 350)
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setLayoutDirection(Qt.RightToLeft)
+        self.setContentsMargins(40, 40, 40, 40)  # הוספת שוליים
         self.init_ui()
 
     def init_ui(self):
@@ -951,9 +982,9 @@ class CreatePageBHeaders(QWidget):
         browse_button = QPushButton("עיון")
         browse_button.setStyleSheet("font-size: 20px;")
         browse_button.clicked.connect(self.browse_file)
-        file_layout.addWidget(browse_button)
-        file_layout.addWidget(self.file_entry)
         file_layout.addWidget(file_label)
+        file_layout.addWidget(self.file_entry)
+        file_layout.addWidget(browse_button)
         layout.addLayout(file_layout)
 
         # רמת כותרת
@@ -966,8 +997,8 @@ class CreatePageBHeaders(QWidget):
         self.header_var.setStyleSheet("font-size: 20px;")
         self.header_var.addItems([str(i) for i in range(2, 7)])
         self.header_var.setCurrentText("3")
-        header_layout.addWidget(self.header_var, alignment=Qt.AlignRight)
         header_layout.addWidget(header_label)
+        header_layout.addWidget(self.header_var, alignment=Qt.AlignLeft | Qt.AlignVCenter)
        
         layout.addLayout(header_layout)
 
@@ -1133,6 +1164,9 @@ class ReplacePageBHeaders(QWidget):
         super().__init__()
         self.setWindowTitle("'החלפת כותרות ל'עמוד ב")
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setLayoutDirection(Qt.RightToLeft)
+        self.setGeometry(100, 100, 1000, 350)
+        self.setContentsMargins(40, 40, 40, 40)  # הוספת שוליים
         self.init_ui()
 
     def init_ui(self):
@@ -1155,9 +1189,9 @@ class ReplacePageBHeaders(QWidget):
         browse_button = QPushButton("עיון")
         browse_button.setStyleSheet("font-size: 20px;")
         browse_button.clicked.connect(self.choose_file)
-        file_layout.addWidget(browse_button)
-        file_layout.addWidget(self.file_entry)
         file_layout.addWidget(file_label)
+        file_layout.addWidget(self.file_entry)
+        file_layout.addWidget(browse_button)
         layout.addLayout(file_layout)
 
         # סוג ההחלפה
@@ -1166,11 +1200,11 @@ class ReplacePageBHeaders(QWidget):
         replace_label.setStyleSheet("font-size: 20px;")
         replace_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.replace_type = QComboBox()
-        self.replace_type.setFixedWidth(140)
+        self.replace_type.setFixedWidth(130)
         self.replace_type.setStyleSheet("font-size: 20px;")
         self.replace_type.addItems(["נקודותיים", "ע\"ב"])
-        replace_layout.addWidget(self.replace_type, alignment=Qt.AlignRight)
         replace_layout.addWidget(replace_label)
+        replace_layout.addWidget(self.replace_type, alignment=Qt.AlignLeft | Qt.AlignVCenter)
         layout.addLayout(replace_layout)
 
         # דוגמאות
@@ -1340,40 +1374,52 @@ class בדיקת_שגיאות_בכותרות(QWidget):
                 self.re_end_entry.setCursorPosition(cursor_pos + 1)
         self.re_end_entry.textChanged.connect(maintain_rtl)
         
-        self.gershayim_var = QCheckBox("כולל גרשיים")
-
-        # הוספת הרכיבים
-        regex_layout.addWidget(self.gershayim_var)
-        regex_layout.addWidget(self.re_end_entry)
-        regex_layout.addWidget(re_end_label)
-        regex_layout.addWidget(self.re_start_entry)
-        regex_layout.addWidget(re_start_label)
-        layout.addLayout(regex_layout)
+        self.gershayim_var = QCheckBox("הגדר גרש/ים כתקינים")
 
         # יצירת QTextEdit והגדרותיהם
         self.unmatched_regex_text = QTextEdit()
         self.unmatched_regex_text.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.unmatched_regex_text.setReadOnly(True)
+        
 
         self.unmatched_tags_text = QTextEdit()
         self.unmatched_tags_text.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.unmatched_tags_text.setReadOnly(True)
-
+        self.unmatched_tags_text.setStyleSheet("margin-bottom: 20px;")
+        
         # עטיפת כל ווידג'ט במכולה עם תווית מעליו
         regex_container = create_labeled_widget(
-            "כותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\nכגון: גרש, פסיק, נקודה, נקודותיים, או רווח לפני הכותרת או לאחרי'.",
+            "\nכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למטה)\nכגון: גרש/ים, פסיק, נקודה, נקודותיים. או רווח לפני הכותרת או לאחרי'.",
             self.unmatched_regex_text
         )
         tags_container = create_labeled_widget("כותרות שאינן לפי הסדר", self.unmatched_tags_text)
+        
+        
 
         # הוספת המכולות ל־QSplitter אנכי
         v_splitter = QSplitter(Qt.Vertical)
-        v_splitter.setHandleWidth(10)  # עובי handle לפי בחירתך
-        v_splitter.addWidget(regex_container)
+        v_splitter.setStyleSheet("QSplitter::handle { background-color: gray; }")
+        v_splitter.setHandleWidth(1)               # מגדיר רוחב לפס הגרירה כדי שיהיה ברור
+        v_splitter.setStyleSheet("""
+            QSplitter::handle:vertical {
+                background-color: black;
+                height: 0.01px;
+                width: 100%;
+            }
+        """)
         v_splitter.addWidget(tags_container)
+        v_splitter.addWidget(regex_container)
 
         # הוספת ה־splitter ל-layout הראשי
         layout.addWidget(v_splitter)
+
+        # הוספת הרכיבים
+        regex_layout.addWidget(re_start_label)
+        regex_layout.addWidget(self.re_start_entry)
+        regex_layout.addWidget(re_end_label)
+        regex_layout.addWidget(self.re_end_entry)
+        regex_layout.addWidget(self.gershayim_var)
+        layout.addLayout(regex_layout)
 
         self.setLayout(layout)
 
@@ -1408,7 +1454,6 @@ class בדיקת_שגיאות_בכותרות(QWidget):
             pattern = re.compile(f"^[א-ת]([א-ת \-]*[א-ת])?[{re_end}]*$")
         else:
             pattern = re.compile(r"^[א-ת]([א-ת \-]*[א-ת])?$")
-
 
         unmatched_regex = []
         unmatched_tags = []
@@ -1446,20 +1491,17 @@ class בדיקת_שגיאות_בכותרות(QWidget):
                     next_heading = next_tag
 
                 # בדיקה אם התג הנוכחי תואם את התבנית
+                # **שינוי חשוב**: אם גרשיים מופעל ויש גרשיים בכותרת, לא נוסיף לרשימת unmatched_regex
                 if not re.match(pattern, current_tag):
-                    unmatched_regex.append(current_tag)
-
-                # בדיקה עבור תנאי גרשיים
-                if gershayim:
-                    if gematriapy.to_number(current_heading) <= 9:
-                        if "'" not in current_heading:
-                            unmatched_tags.append(current_heading)
+                    if gershayim and ("'" in current_tag or '"' in current_tag):
+                        # לא נוסיף לרשימת unmatched_regex
+                        pass
                     else:
-                        if '"' not in current_heading:
-                            unmatched_tags.append(current_heading)
-                else:
-                    if "'" in current_heading or '"' in current_heading:
-                        unmatched_tags.append(current_heading)
+                        unmatched_regex.append(current_tag)
+
+                # בדיקה עבור תנאי גרשיים - תמיד כאילו gershayim=False
+                if "'" in current_heading or '"' in current_heading:
+                    unmatched_tags.append(current_heading)
 
                 # בדיקה אם הכותרות הן ברצף
                 if not gematriapy.to_number(current_heading) + 1 == gematriapy.to_number(next_heading):
@@ -1468,7 +1510,12 @@ class בדיקת_שגיאות_בכותרות(QWidget):
             # עיבוד התג האחרון
             last_tag = tags[-1].string or ""
             if last_tag and not re.match(pattern, last_tag):
-                unmatched_regex.append(last_tag)
+                # **שינוי חשוב**: אם גרשיים מופעל ויש גרשיים בכותרת, לא נוסיף לרשימת unmatched_regex
+                if gershayim and ("'" in last_tag or '"' in last_tag):
+                    # לא נוסיף לרשימת unmatched_regex
+                    pass
+                else:
+                    unmatched_regex.append(last_tag)
 
             last_heading_parts = last_tag.split()
             if len(last_heading_parts) > 1:
@@ -1476,16 +1523,9 @@ class בדיקת_שגיאות_בכותרות(QWidget):
             else:
                 last_heading = last_tag
 
-            if gershayim:
-                if gematriapy.to_number(last_heading) <= 9:
-                    if "'" not in last_heading:
-                        unmatched_tags.append(last_heading)
-                else:
-                    if '"' not in last_heading:
-                        unmatched_tags.append(last_heading)
-            else:
-                if "'" in last_heading or '"' in last_heading:
-                    unmatched_tags.append(last_heading)
+            # הקוד של unmatched_tags - תמיד כאילו gershayim=False
+            if "'" in last_heading or '"' in last_heading:
+                unmatched_tags.append(last_heading)
 
         return unmatched_regex, unmatched_tags
 
@@ -1607,6 +1647,7 @@ class CheckHeadingErrorsOriginal(QWidget):
         super().__init__()
         self.setWindowTitle("בודק כותרות + בודק תגים")
         self.setWindowIcon(self.get_app_icon())
+        self.setGeometry(100, 100, 1300, 800)
 
         # שני ה־Widgets שלנו
         self.check_headings_widget = בדיקת_שגיאות_בכותרות()
@@ -1629,10 +1670,15 @@ class CheckHeadingErrorsOriginal(QWidget):
         self.browse_button.setFixedWidth(280)
         self.browse_button.clicked.connect(self.browse_file)
 
-        top_layout.addWidget(self.browse_button)
-        top_layout.addWidget(self.file_path_edit)
-        top_layout.addWidget(self.file_path_label)
+        self.check_again = QPushButton("בדוק שוב")
+        self.check_again.setStyleSheet("font-size: 18px;")        
+        self.check_again.clicked.connect(self.run_from_line_edit)
 
+        top_layout.addWidget(self.check_again)
+        top_layout.addWidget(self.file_path_label)
+        top_layout.addWidget(self.file_path_edit)
+        top_layout.addWidget(self.browse_button)
+    
         # הפרדה אופקית (splitter) בין שני הרכיבים
         splitter = QSplitter(Qt.Horizontal)
         splitter.setStyleSheet("QSplitter::handle { background-color: gray; }")
@@ -1645,7 +1691,6 @@ class CheckHeadingErrorsOriginal(QWidget):
                 background: gray;
             }
         """)
-        
         splitter.setChildrenCollapsible(False)   # מונע מקיפול אוטומטי של אחד מהווידג'טים
         self.html_tag_checker_widget.setMinimumWidth(10)  # מגדיר רוחב מינימלי
         self.check_headings_widget.setMinimumWidth(10)      # מגדיר רוחב מינימלי        
@@ -1657,13 +1702,13 @@ class CheckHeadingErrorsOriginal(QWidget):
         # אל נוסיף כאן את ה־ pic_count_label
         html_container = QWidget()
         html_container.setLayout(self.html_container_layout)
-        splitter.addWidget(html_container)
+        
 
         html_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.check_headings_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         html_container.setMaximumHeight(16777215)
         self.check_headings_widget.setMaximumHeight(16777215)
-        self.check_headings_widget.resize(1000, 400)
+        self.check_headings_widget.resize(800, 400)
         html_container.resize(800, 400)
 
         self.pic_count_label = QLabel("")
@@ -1679,11 +1724,12 @@ class CheckHeadingErrorsOriginal(QWidget):
         top_container.setLayout(top_layout)
         top_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         main_layout.addWidget(top_container)
+        splitter.addWidget(html_container)
 
         main_layout.addWidget(splitter, 1)
 
         self.setLayout(main_layout)
-        self.resize(1250, 700)  # גודל התחלתי
+        self.resize(1700, 900)  # גודל התחלתי
 
     def process_file(self, file_path):
         if not file_path:
@@ -1747,6 +1793,16 @@ class CheckHeadingErrorsOriginal(QWidget):
 
     def run_from_line_edit(self):
         file_path = self.file_path_edit.text().strip()
+        
+        if not file_path:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)            
+            msg.setWindowTitle("קלט לא תקין")
+            msg.setText("נא לבחור קובץ תחילה")
+            QTimer.singleShot(1000, msg.close)  # סוגר את ההודעה לאחר 1000 מילי־שניות (1 שניות)
+            msg.show()
+            return        
+        
         if file_path:
             self.process_file(file_path)
 
@@ -1800,15 +1856,8 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
         self.re_end_entry.textChanged.connect(maintain_rtl)
         self.re_end_entry.setText(".:")
 
-        self.gershayim_var = QCheckBox("כולל גרשיים")
+        self.gershayim_var = QCheckBox("הגדר גרש/ים כתקינים")
 
-        # הוספת הרכיבים
-        regex_layout.addWidget(self.gershayim_var)
-        regex_layout.addWidget(self.re_end_entry)
-        regex_layout.addWidget(re_end_label)
-        regex_layout.addWidget(self.re_start_entry)
-        regex_layout.addWidget(re_start_label)
-        layout.addLayout(regex_layout)
 
         # יצירת QTextEdit והגדרותיהם
         self.unmatched_regex_text = QTextEdit()
@@ -1818,22 +1867,39 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
         self.unmatched_tags_text = QTextEdit()
         self.unmatched_tags_text.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.unmatched_tags_text.setReadOnly(True)
+        self.unmatched_tags_text.setStyleSheet("margin-bottom: 20px;")
 
         # עטיפת כל ווידג'ט במכולה עם תווית מעליו
         regex_container = create_labeled_widget(
-            "כותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למעלה)\nכגון: גרש, פסיק, נקודה, נקודותיים, או רווח לפני הכותרת או לאחרי'.",
+            "\nכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למטה)\nכגון: גרש/ים, פסיק, נקודה, נקודותיים. או רווח לפני הכותרת או לאחרי'.",
             self.unmatched_regex_text
         )
         tags_container = create_labeled_widget("כותרות שאינן לפי הסדר\nהתוכנה מדלגת בבדיקה בכל פעם על כותרת אחת, בגלל הכותרות הכפולות של עמוד ב", self.unmatched_tags_text)
 
         # הוספת המכולות ל־QSplitter אנכי
         v_splitter = QSplitter(Qt.Vertical)
-        v_splitter.setHandleWidth(10)  # עובי handle לפי בחירתך
-        v_splitter.addWidget(regex_container)
+        v_splitter.setStyleSheet("QSplitter::handle { background-color: gray; }")
+        v_splitter.setHandleWidth(1)  # עובי handle לפי בחירתך
+        v_splitter.setStyleSheet("""
+            QSplitter::handle:vertical {
+                background-color: black;
+                height: 0.01px;
+                width: 100%;
+            }
+        """)
         v_splitter.addWidget(tags_container)
-
+        v_splitter.addWidget(regex_container)
+        
         # הוספת ה־splitter ל-layout הראשי
         layout.addWidget(v_splitter)
+
+        # הוספת הרכיבים
+        regex_layout.addWidget(re_start_label)
+        regex_layout.addWidget(self.re_start_entry)
+        regex_layout.addWidget(re_end_label)
+        regex_layout.addWidget(self.re_end_entry)
+        regex_layout.addWidget(self.gershayim_var)
+        layout.addLayout(regex_layout)
 
         self.setLayout(layout)
 
@@ -1906,20 +1972,17 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
                     next_heading = next_tag
 
                 # בדיקה אם התג הנוכחי תואם את התבנית
+                # **שינוי חשוב**: אם גרשיים מופעל ויש גרשיים בכותרת, לא נוסיף לרשימת unmatched_regex
                 if not re.match(pattern, current_tag):
-                    unmatched_regex.append(current_tag)
-
-                # בדיקה עבור תנאי גרשיים
-                if gershayim:
-                    if gematriapy.to_number(current_heading) <= 9:
-                        if "'" not in current_heading:
-                            unmatched_tags.append(current_heading)
+                    if gershayim and ("'" in current_tag or '"' in current_tag):
+                        # לא נוסיף לרשימת unmatched_regex
+                        pass
                     else:
-                        if '"' not in current_heading:
-                            unmatched_tags.append(current_heading)
-                else:
-                    if "'" in current_heading or '"' in current_heading:
-                        unmatched_tags.append(current_heading)
+                        unmatched_regex.append(current_tag)
+
+                # בדיקה עבור תנאי גרשיים - תמיד כאילו gershayim=False
+                if "'" in current_heading or '"' in current_heading:
+                    unmatched_tags.append(current_heading)
 
                 # בדיקה אם הכותרות הן ברצף
                 if not gematriapy.to_number(current_heading) + 1 == gematriapy.to_number(next_heading):
@@ -1935,7 +1998,12 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 
             for last_tag in last_tages:
                 if last_tag and not re.match(pattern, last_tag):
-                    unmatched_regex.append(last_tag)
+                    # **שינוי חשוב**: אם גרשיים מופעל ויש גרשיים בכותרת, לא נוסיף לרשימת unmatched_regex
+                    if gershayim and ("'" in last_tag or '"' in last_tag):
+                        # לא נוסיף לרשימת unmatched_regex
+                        pass
+                    else:
+                        unmatched_regex.append(last_tag)
 
             last_heading_parts = last_tages[-1].split()
             if len(last_heading_parts) > 1:
@@ -1943,16 +2011,9 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
             else:
                 last_heading = last_tages[-1]
 
-            if gershayim:
-                if gematriapy.to_number(last_heading) <= 9:
-                    if "'" not in last_heading:
-                        unmatched_tags.append(last_heading)
-                else:
-                    if '"' not in last_heading:
-                        unmatched_tags.append(last_heading)
-            else:
-                if "'" in last_heading or '"' in last_heading:
-                    unmatched_tags.append(last_heading)
+            # הקוד של unmatched_tags - תמיד כאילו gershayim=False
+            if "'" in last_heading or '"' in last_heading:
+                unmatched_tags.append(last_heading)
 
         return unmatched_regex, unmatched_tags
 
@@ -2095,9 +2156,14 @@ class CheckHeadingErrorsCustom(QWidget):
         self.browse_button.setFixedWidth(280)
         self.browse_button.clicked.connect(self.browse_file)
 
-        top_layout.addWidget(self.browse_button)
-        top_layout.addWidget(self.file_path_edit)
+        self.check_again = QPushButton("בדוק שוב")
+        self.check_again.setStyleSheet("font-size: 18px;")        
+        self.check_again.clicked.connect(self.run_from_line_edit)
+
+        top_layout.addWidget(self.check_again)
         top_layout.addWidget(self.file_path_label)
+        top_layout.addWidget(self.file_path_edit)
+        top_layout.addWidget(self.browse_button)
 
         # הפרדה אופקית (splitter) בין שני הרכיבים
         splitter = QSplitter(Qt.Horizontal)
@@ -2123,13 +2189,12 @@ class CheckHeadingErrorsCustom(QWidget):
         # אל נוסיף כאן את ה־ pic_count_label
         html_container = QWidget()
         html_container.setLayout(self.html_container_layout)
-        splitter.addWidget(html_container)
 
         html_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.check_headings_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         html_container.setMaximumHeight(16777215)
         self.check_headings_widget.setMaximumHeight(16777215)
-        self.check_headings_widget.resize(1000, 400)
+        self.check_headings_widget.resize(800, 400)
         html_container.resize(800, 400)
 
         self.pic_count_label = QLabel("")
@@ -2145,11 +2210,12 @@ class CheckHeadingErrorsCustom(QWidget):
         top_container.setLayout(top_layout)
         top_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         main_layout.addWidget(top_container)
-
+        splitter.addWidget(html_container)
+        
         main_layout.addWidget(splitter, 1)
 
         self.setLayout(main_layout)
-        self.resize(1250, 700)  # גודל התחלתי
+        self.resize(1700, 900)  # גודל התחלתי
 
     def process_file(self, file_path):
         if not file_path:
@@ -2213,6 +2279,16 @@ class CheckHeadingErrorsCustom(QWidget):
 
     def run_from_line_edit(self):
         file_path = self.file_path_edit.text().strip()
+        
+        if not file_path:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)            
+            msg.setWindowTitle("קלט לא תקין")
+            msg.setText("נא לבחור קובץ תחילה")
+            QTimer.singleShot(1000, msg.close)  # סוגר את ההודעה לאחר 1000 מילי־שניות (1 שניות)
+            msg.show()
+            return        
+        
         if file_path:
             self.process_file(file_path)
 
@@ -2231,7 +2307,9 @@ class ImageToHtmlApp(QtWidgets.QWidget):
         super().__init__()
         self.setWindowTitle("המרת תמונה לטקסט")
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
-        self.setGeometry(100, 100, 500, 500)
+        self.setGeometry(100, 100, 800, 550)
+        self.setLayoutDirection(Qt.RightToLeft)
+        self.setContentsMargins(40, 40, 40, 40)  # הוספת שוליים
 
         self.layout = QtWidgets.QVBoxLayout(self)
         
@@ -2455,6 +2533,8 @@ class TextCleanerApp(QWidget):
         self.initUI()
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
         self.setLayoutDirection(Qt.RightToLeft)
+        self.setContentsMargins(40, 40, 40, 40)  # הוספת שוליים
+        self.setGeometry(100, 100, 600, 500)        
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -2490,7 +2570,7 @@ class TextCleanerApp(QWidget):
             "remove_spaces_after": QCheckBox("\u202Bמחיקת רווחים וירידות שורה אחרי - [ ("),
             "remove_spaces_around_newlines": QCheckBox("מחיקת רווחים לפני ואחרי אנטר"),
             "replace_double_quotes": QCheckBox("החלפת 2 גרשים בודדים בגרשיים"),
-            "normalize_quotes": QCheckBox("המרת גרשיים מוזרים לגרשיים רגילים"),
+            "normalize_quotes": QCheckBox("המרת גרשיים לא סטנדרטיים לגרשיים רגילים"),
         }
 
         for checkbox in self.checkBoxes.values():
@@ -2730,7 +2810,6 @@ class SyncWorker(QThread):
             self.finished_signal.emit(True, "הסנכרון הושלם בהצלחה")
         
         except Exception as e:
-            import traceback
             self.update_progress.emit(f"שגיאה קריטית בתהליך הסנכרון: {str(e)}")
             self.update_progress.emit(traceback.format_exc()) # הדפסת Traceback ללוג לדיבוג
             self.finished_signal.emit(False, f"שגיאה בתהליך הסנכרון: {str(e)}")
@@ -2798,6 +2877,8 @@ class MainWindow(QMainWindow):
         
         # ניסיון לטעון את התיקייה האחרונה מהלוג
         self.books_folder = extract_last_folder_from_log(self.log_file)
+        self.setContentsMargins(40, 40, 40, 40)  # הוספת שוליים
+        self.setLayoutDirection(Qt.RightToLeft)
 
         self.init_ui()
         self.init_logger()  # אתחול מערכת הלוג
@@ -2810,7 +2891,6 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(800, 600)
         self.setGeometry(100, 100, 800, 600)
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
-        self.setLayoutDirection(Qt.RightToLeft)
         
         # יצירת ווידג'ט מרכזי
         central_widget = QWidget()
@@ -2877,7 +2957,7 @@ class MainWindow(QMainWindow):
         """החלת עיצוב מודרני על הממשק"""
         # הגדרת גופן ברירת מחדל
         app = QApplication.instance()
-        font = QFont("Arial", 10)
+        font = QFont("Segoe UI", 10)
         app.setFont(font)
         
         # עיצוב כללי
@@ -2887,7 +2967,7 @@ class MainWindow(QMainWindow):
         }
         
         QWidget {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Segoe UI, Arial, Helvetica;
         }
         
         QPushButton {
@@ -2959,7 +3039,7 @@ class MainWindow(QMainWindow):
                 QPushButton {
                     background-color: #3498db;
                     color: white;
-                    border: none;
+                    border: : 1px solid #888;
                     border-radius: 8px;
                     padding: 10px 20px;
                     font-weight: bold;
@@ -2987,7 +3067,7 @@ class MainWindow(QMainWindow):
 
         # הודעה על טעינת תיקייה קודמת
         if self.books_folder:
-            self.log(f"נטענה תיקייה אחרונה שסונכרנה: {self.books_folder}")
+            self.log(f"נטענה אוטומטית תיקייה אחרונה שסונכרנה: {self.books_folder}")
         else:
             return
     
@@ -3065,6 +3145,8 @@ class MainWindow(QMainWindow):
             return
         
         msg_box = QMessageBox(self)
+        msg_box.setLayoutDirection(Qt.RightToLeft)
+        msg_box.setContentsMargins(20, 20, 20, 20)  # הוספת שוליים
         msg_box.setWindowTitle("אישור סנכרון")
         msg_box.setText("האם אתה בטוח שברצונך לסנכרן את הספרים? פעולה זו תוריד קבצים חדשים שנוספו לתיקיי', וכן תמחק קבצים שנמחקו ממנה.\nשים לב! פעולה זו אינה הפיכה")
         msg_box.setIcon(QMessageBox.Question)
@@ -3158,7 +3240,8 @@ class MainWindow(QMainWindow):
         pixmap = QPixmap()
         pixmap.loadFromData(base64.b64decode(base64_string))
         return QIcon(pixmap)
-    
+
+
 # ==========================================
 # Main Menu: תפריט ראשי לבחירת הסקריפטים
 # ==========================================
@@ -3176,6 +3259,9 @@ class MainMenu(QWidget):
         self.setWindowTitle("עריכת ספרי דיקטה עבור אוצריא")
         self.setLayoutDirection(Qt.RightToLeft)
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
+        self.setContentsMargins(50, 50, 50, 50)  # הוספת שוליים
+        self.apply_styles()  # החלת העיצוב
+
         self.init_ui()
 
         # הגדרת האייקון לשורת המשימות
@@ -3184,6 +3270,21 @@ class MainMenu(QWidget):
         
         # בדיקת עדכונים אוטומטית בהפעלה (בשקט)
         QTimer.singleShot(1000, self.check_for_updates)
+
+    def apply_styles(self):
+        """החלת עיצוב מודרני על הממשק"""
+        # הגדרת גופן ברירת מחדל
+        app = QApplication.instance()
+        font = QFont("Segoe UI", 10)
+        app.setFont(font)
+                
+        # עיצוב כללי
+        style_sheet = """
+        QWidget {
+            background-color: #F8F9FA;
+        }
+        """
+        self.setStyleSheet(style_sheet)
 
     def check_for_updates(self, silent=True):
         """
@@ -3212,9 +3313,23 @@ class MainMenu(QWidget):
                 "אתה משתמש בגרסה העדכנית ביותר"
             )
 
+    # פונקציה להודעות סטטוס זמניות
+    def set_temporary_status(self, message, duration_seconds=120):
+        """הצגת הודעת סטטוס זמנית שתיעלם אחרי זמן מוגדר"""
+        self.status_label.setText(message)
+        
+        # יצירת טיימר שיוריד את ההודעה
+        if hasattr(self, 'status_timer'):
+            self.status_timer.stop()
+        
+        self.status_timer = QTimer()
+        self.status_timer.setSingleShot(True)
+        self.status_timer.timeout.connect(lambda: self.status_label.setText(""))
+        self.status_timer.start(duration_seconds * 1000)  # המרה לאלפיות השנייה
+
     def handle_update_error(self, error_msg, silent=True):
         """טיפול בשגיאות בתהליך העדכון"""
-        self.status_label.setText("שגיאה בבדיקת העדכונים")
+        self.set_temporary_status("שגיאה בבדיקת העדכונים", 120)  # 2
         
         if not silent:
             QMessageBox.warning(
@@ -3242,8 +3357,8 @@ class MainMenu(QWidget):
             ("5\n\nהדגשת\nמילה ראשונה\nוניקוד בסוף קטע", self.open_emphasize_and_punctuate),
             ("6\n\nיצירת כותרות\nלעמוד ב\n", self.open_create_page_b_headers),
             ("7\n\nהחלפת כותרות\nלעמוד ב\n", self.open_replace_page_b_headers),
-            ("10\n\nבדיקת שגיאות\n\n", self.open_check_heading_errors_original),
-            ("9\n\nבדיקת שגיאות\nלספרים על השס\n", self.open_check_heading_errors_custom),
+            ("9\n\nבדיקת שגיאות\n\n", self.open_check_heading_errors_original),
+            ("10\n\nבדיקת שגיאות\nלספרים על השס\n", self.open_check_heading_errors_custom),
             ("8\n\nהמרת תמונה\nלטקסט\n", self.open_Image_To_Html_App),
             ("11\n\nתיקון\nשגיאות נפוצות\n", self.open_Text_Cleaner_App),
             ("12\n\nסנכרון\nספרי דיקטה\n", self.open_Main_Window),
@@ -3259,6 +3374,7 @@ class MainMenu(QWidget):
             # הוספת עיצוב של שוליים מעוגלים לכל כפתור
             button.setStyleSheet("""
                 QPushButton {
+                    border: 1px solid #888;
                     border-radius: 30px;
                     padding: 10px;
                     margin: 5;
@@ -3281,8 +3397,8 @@ class MainMenu(QWidget):
         grid_layout.addWidget(buttons[4], 1, 0)  # שורה 2, טור 2
         grid_layout.addWidget(buttons[5], 1, 1)  # שורה 2, טור 3
         grid_layout.addWidget(buttons[6], 1, 2)  # שורה 3, טור 1
-        grid_layout.addWidget(buttons[7], 2, 1)  # שורה 3, טור 2
-        grid_layout.addWidget(buttons[8], 2, 0)  # שורה 3, טור 3
+        grid_layout.addWidget(buttons[7], 2, 0)  # שורה 3, טור 2
+        grid_layout.addWidget(buttons[8], 2, 1)  # שורה 3, טור 3
         grid_layout.addWidget(buttons[9], 1, 3)  # שורה 4, טור 1
         grid_layout.addWidget(buttons[10], 2, 2)  # שורה 4, טור 2
         grid_layout.addWidget(buttons[11], 2, 3)  # שורה 4, טור 3
@@ -3294,27 +3410,50 @@ class MainMenu(QWidget):
         
         # כפתור "אודות התוכנה" (הכי ימני)
         about_button = QPushButton("i")
-        about_button.setStyleSheet("font-weight: bold; font-size: 12pt;")
+        about_button.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                font-size: 12pt;
+                border-radius: 30px;
+                background-color: #eaeaea;
+                border: 1px solid #888;
+            }
+            QPushButton:hover {
+                background-color: #b7b5b5;
+            }                                   
+        """)
         about_button.setCursor(QCursor(Qt.PointingHandCursor))
         about_button.clicked.connect(self.open_about_dialog)
         about_button.setFixedSize(40, 40)
         about_button.setToolTip("אודות התוכנה")
-        buttons_layout.addWidget(about_button)
 
         # כפתור "עדכונים" (שמאלה מ"אודות")
         update_button = QPushButton("⭳")
-        update_button.setStyleSheet("font-weight: bold; font-size: 12pt;")
+        update_button.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                font-size: 12pt;
+                border-radius: 30px;
+                background-color: #eaeaea;
+                border: 1px solid #888;
+            }
+            QPushButton:hover {
+                background-color: #b7b5b5;
+            }                                   
+        """)
         update_button.setCursor(QCursor(Qt.PointingHandCursor))
         update_button.clicked.connect(lambda: self.check_for_updates(silent=False))
         update_button.setFixedSize(40, 40)
         update_button.setToolTip("בדיקת עדכונים")
+        # עיצוב הכפתורים הקטנים
+        buttons_layout.setContentsMargins(0, 20, 20, 0)  # ביטול שוליים
+        
+        buttons_layout.addWidget(about_button)
         buttons_layout.addWidget(update_button)
-                
+        
         # הוספת spacer לדחיפת הכפתורים לימין
         buttons_layout.addStretch()
 
-        buttons_layout.setContentsMargins(0, 20, 20, 0)  # ביטול שוליים
-                             
         layout.addLayout(buttons_layout)
 
         # שורת הסטטוס עבור מצב העדכונים
@@ -3418,8 +3557,24 @@ class MainMenu(QWidget):
         
         # אם שום נתיב לא נמצא, החזר את התיקייה הנוכחית
         return os.getcwd()
+
+# ========================================== #
+# עדכונים והתקנות
+# ========================================== #
+
+    def unblock_downloaded_file(self, file_path):
+        """הסרת חסימה אינטרנטית מקובץ שהורד (אם קיימת)"""
+        try:
+            zone_file = file_path + ":Zone.Identifier"
+            if os.path.exists(zone_file):
+                os.remove(zone_file)
+                print(f"הוסרה חסימה אינטרנטית מהקובץ: {file_path}")
+            else:
+                print("לא נמצאה חסימה אינטרנטית בקובץ")
+        except Exception as e:
+            print(f"שגיאה בהסרת חסימה אינטרנטית: {e}")
+            # לא עוצרים את התהליך אם יש שגיאה
       
-    # עדכונים
     def check_for_update_ready(self):
         """בדיקה אם העדכון מוכן להתקנה"""
         current_dir = os.path.dirname(sys.executable)
@@ -3438,12 +3593,10 @@ class MainMenu(QWidget):
                 current_exe = sys.executable
                 
                 if os.path.exists(temp_exe):
+                    # הסרת חסימה אינטרנטית מהקובץ החדש
+                    self.unblock_downloaded_file(temp_exe)                    
                     try:
-                        # שחרור הקובץ הנוכחי מהזיכרון
-                        import win32api
-                        import win32con
-                        import win32gui
-                        
+                        # שחרור הקובץ הנוכחי מהזיכרון                   
                         # שליחת הודעת סגירה לכל החלונות של התוכנה
                         def enum_windows_callback(hwnd, _):
                             if win32gui.IsWindowVisible(hwnd):
@@ -3472,61 +3625,244 @@ class MainMenu(QWidget):
             except Exception as e:
                 print(f"שגיאה בהתקנת העדכון: {e}")
 
-    def handle_update_available(self, download_url, new_version):
+    def handle_update_available(self, download_url, new_version, published_at, release_body, file_size=None):
         """טיפול בעידכון"""
         self.status_label.setText("עדכון זמין")
+
+        # יצירת חלון דיאלוג מותאם אישית
+        dialog = QDialog(self)
+        dialog.setLayoutDirection(Qt.RightToLeft)  # תמיכה בעברית
+        dialog.setWindowTitle("נמצא עדכון")
         
-        msg_box = QMessageBox(self)
-        msg_box.setWindowTitle("אישור סנכרון")
-        msg_box.setText(f"נמצאה גרסה חדשה ({new_version})!\nהאם ברצונך לעדכן כעת?",)
-        msg_box.setIcon(QMessageBox.Question)
+        # הגדרת גודל החלון (רוחב, גובה)
+        dialog.resize(700, 600)  # ניתן לשנות לפי הצורך
+        
+        # יצירת layout עיקרי
+        main_layout = QVBoxLayout(dialog)
+        
+        # === חלק עליון קבוע (לא נגלל) ===
+        top_widget = QTextEdit()
+        top_widget.setReadOnly(True) # מונע עריכה
+        top_widget.setLayoutDirection(Qt.RightToLeft)
+        top_widget.setMaximumHeight(205)  # גובה קבוע
+        top_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # ללא פס גלילה
+        top_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        top_widget.setFrameStyle(0)  # מבטל את המסגרת
+        
+        # עיצוב התאריך בעברית
+        formatted_date = ""
+        if published_at:
+            try:
+                # המרת מספרים לעברית
+                hebrew_numbers = {
+                    1: "א", 2: "ב'", 3: "ג'", 4: "ד'", 5: "ה'", 6: "ו'", 7: "ז'", 8: "ח'", 9: "ט'", 10: "י'",
+                    11: 'י"א', 12: 'י"ב', 13: 'י"ג', 14: 'י"ד', 15: 'ט"ו', 16: 'ט"ז', 17: 'י"ז', 18: 'י"ח', 19: 'י"ט', 20: "כ'",
+                    21: 'כ"א', 22: 'כ"ב', 23: 'כ"ג', 24: 'כ"ד', 25: 'כ"ה', 26: 'כ"ו', 27: 'כ"ז', 28: 'כ"ח', 29: 'כ"ט', 30: "ל'"
+                }   
+                # שמות חודשים עבריים
+                hebrew_months = {
+                    'Tishrei': 'תשרי', 'Marcheshvan': 'חשון', 'Kislev': 'כסלו', 'Tevet': 'טבת',
+                    'Shevat': 'שבט', 'Adar': 'אדר', 'Adar I': 'אדר א', 'Adar II': 'אדר ב',
+                    'Nissan': 'ניסן', 'Iyar': 'אייר', 'Sivan': 'סיון', 'Tammuz': 'תמוז',
+                    'Av': 'אב', 'Elul': 'אלול'
+                }
+                def convert_hebrew_year(year):
+                    """המרת שנה עברית למספרים עבריים"""
+                    # המרה פשוטה לשנים נפוצות (תש"פ-תת"ק בערך)
+                    year_mapping = {
+                        5785: 'תשפ"ה', 5786: 'תשפ"ו', 5787: 'תשפ"ז', 5788: 'תשפ"ח', 5789: 'תשפ"ט', 5790: 'תש"צ',
+                        5791: 'תשצ"א', 5792: 'תשצ"ב', 5793: 'תשצ"ג', 5794: 'תשצ"ד', 5795: 'תשצ"ה',
+                        5796: 'תשצ"ו', 5797: 'תשצ"ז', 5798: 'תשצ"ח', 5799: 'תשצ"ט', 5800: 'ת"ת'
+                    }
+                    return year_mapping.get(year, str(year))
+                
+                # המרת התאריך ל- datetime
+                dt = datetime.fromisoformat(published_at.replace('Z', '+00:00'))
+                hebrew_date = dates.GregorianDate(dt.year, dt.month, dt.day).to_heb()
+                
+                # קבלת המידע מהתאריך העברי
+                hebrew_day = hebrew_date.day
+                hebrew_month_eng = hebrew_date.month_name()  # שם החודש באנגלית
+                hebrew_year = hebrew_date.year
+                
+                # המרה לעברית
+                hebrew_day_str = hebrew_numbers.get(hebrew_day, str(hebrew_day))
+                hebrew_month_heb = hebrew_months.get(hebrew_month_eng, hebrew_month_eng)
+                hebrew_year_str = convert_hebrew_year(hebrew_year)
+                
+                # בניית המחרוזת
+                time_str = dt.strftime("%H:%M")
+                formatted_date = f"{hebrew_day_str} {hebrew_month_heb} {hebrew_year_str}, בשעה {time_str}"
+                
+            except Exception as e:
+                print(f"שגיאה בהמרת תאריך עברי: {e}")
+                traceback.print_exc()
+                
+                # fallback לתאריך רגיל
+                try:
+                    dt = datetime.fromisoformat(published_at.replace('Z', '+00:00'))
+                    formatted_date = dt.strftime("%d/%m/%Y %H:%M")
+                except:
+                    formatted_date = published_at        
+        
+        # תוכן החלק העליון
+        top_message = f"<div style='text-align: left; direction: rtl; font-family: Segoe UI, Arial;'>"
+        top_message += f"<h2 style='color: #2E86AB; text-align: center; margin: 5px 0;'>נמצאה גרסה חדשה!</h2>"
+        top_message += f"<p style='margin: 3px 0;'><b>גרסה:</b> {new_version}</p>"
+        
+        if formatted_date:
+            top_message += f"<p><b>תאריך פרסום:</b> {formatted_date}</p>"  
 
-        # הגדרת הכפתורים בעברית
-        yes_button = msg_box.addButton("כן", QMessageBox.YesRole)
-        no_button = msg_box.addButton("לא", QMessageBox.NoRole)
-        msg_box.setDefaultButton(yes_button)
+        if file_size:
+            # המרה לMB עם עיגול לשתי ספרות אחרי הנקודה
+            size_mb = file_size / (1024 * 1024)
+            top_message += f"<p><p style='margin: 3px 0;'><b>גודל הקובץ:</b> {size_mb:.2f} MB</p></p>"
+            top_message += f"<h3 style='color: #A23B72; text-align: center; margin-bottom: 15px;'>פרטי העדכון:</h3>"
+        
+        top_message += f"</div>"
+        top_widget.setHtml(top_message)
 
+        # === חלק אמצעי (נגלל) ===
+        middle_widget = QTextEdit()
+        middle_widget.setReadOnly(True)
+        middle_widget.setLayoutDirection(Qt.RightToLeft)
+        
+        # עיצוב פס הגלילה
+        middle_widget.setStyleSheet("""
+            QTextEdit {
+                border: none;
+                background-color: white;
+            }
+            QScrollBar:vertical {
+                background: #f0f0f0;
+                width: 8px;
+                border-radius: 4px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: #c0c0c0;
+                border-radius: 4px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #a0a0a0;
+            }
+            QScrollBar::handle:vertical:pressed {
+                background: #808080;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+                border: none;
+                background: none;
+            }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+        """)
+                
+        # תוכן החלק האמצעי (רק פרטי העדכון)
+        middle_message = f"<div style='text-align: left; direction: rtl; font-family: Segoe UI, Arial;;'>"        
+        if release_body:
+            middle_message += f"<div style='background-color: #f5f5f5; padding: 15px; border-radius: 5px; line-height: 1.5;'>{release_body}</div>"
+        else:
+            middle_message += f"<p style='text-align: center; color: #666;'>אין פרטים נוספים על העדכון</p>"
+        middle_message += f"</div>"
+        middle_widget.setHtml(middle_message)
+
+        
+        # === חלק תחתון קבוע (לא נגלל) ===
+        bottom_widget = QTextEdit()
+        bottom_widget.setReadOnly(True)
+        bottom_widget.setLayoutDirection(Qt.RightToLeft)
+        bottom_widget.setMaximumHeight(50)  # גובה קבוע
+        bottom_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        bottom_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        bottom_widget.setFrameStyle(0)  # מבטל את המסגרת
+
+        # תוכן החלק התחתון
+        bottom_message = f"<div style='text-align: left; direction: rtl; font-family: Segoe UI, Arial;;'>"
+        bottom_message += f"<h3 style='text-align: center; color: #F18F01; margin: 10px 0;'>האם ברצונך לעדכן כעת?</h3>"
+        bottom_message += f"</div>"
+        bottom_widget.setHtml(bottom_message)
+        
+        # הוספת כל החלקים ל-layout
+        main_layout.addWidget(top_widget)
+        main_layout.addWidget(middle_widget)  # רק החלק הזה יגלל
+        main_layout.addWidget(bottom_widget)
+        
+        # יצירת layout לכפתורים
+        button_layout = QHBoxLayout()
+        
+        # יצירת layout לכפתורים
+        button_layout = QHBoxLayout()
+        
+        # יצירת כפתורים
+        yes_button = QPushButton("כן")
+        no_button = QPushButton("לא")
+
+        # עיצוב הכפתורים
         yes_button.setStyleSheet("""
             QPushButton {
-                color: black;
-                border: 2px solid #3498db; /* גבול כחול בולט */
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                font-size: 18px;
                 border-radius: 5px;
-                padding: 5px 10px;
-                font-weight: bold; /* טקסט מודגש */
+                font-weight: bold;
                 min-width: 80px;
                 min-height: 30px;
             }
             QPushButton:hover {
-                background-color: #3498db; /* מעט כהה יותר במעבר עכבר */
+                background-color: #45a049;
             }
             QPushButton:pressed {
-                background-color: #2980b9; /* עוד יותר כהה בלחיצה */
-            }
+                background-color: #3e8e41;
+            }    
         """)
-        # ודא שהכפתור השני נשאר עם העיצוב הסטנדרטי של QMessageBox
+        
         no_button.setStyleSheet("""
             QPushButton {
-                /* אפשר להשאיר ריק כדי שיקבל את ה-CSS מ-QMessageBox QPushButton */
-                /* או להגדיר במפורש את הסגנון הרגיל אם צריך */
-                background-color: #ebebeb; /* דוגמה לצבע רגיל */
-                color: black;
-                border: 1px solid #cccccc;
+                background-color: #f44336;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                font-size: 18px;
                 border-radius: 5px;
-                padding: 5px 10px;
-                font-weight: normal;
+                font-weight: bold;
                 min-width: 80px;
-                min-height: 30px;                 
+                min-height: 30px;                                
             }
-            QPushButton:hover { background-color: #f5f5f5; }
-            QPushButton:pressed { background-color: #dddddd; }
+            QPushButton:hover {
+                background-color: #da190b;
+            }
+            QPushButton:pressed {
+                background-color: #c62828;
+            }
         """)
+        
+        # הוספת הכפתורים ל-layout (כן משמאל, לא מימין עבור עברית)
+        button_layout.addStretch()  # מוסיף רווח
+        button_layout.addWidget(yes_button)
+        button_layout.addWidget(no_button)
+        button_layout.addStretch()  # מוסיף רווח
+        
+        # הוספת layout הכפתורים ל-layout הראשי
+        main_layout.addLayout(button_layout)
+        
+        # חיבור הכפתורים לפונקציות
+        yes_button.clicked.connect(dialog.accept)
+        no_button.clicked.connect(dialog.reject)
+        
+        # הגדרת כפתור ברירת המחדל
+        yes_button.setDefault(True)
+        yes_button.setFocus()
+        
+        # הרצת החלון
+        result = dialog.exec_()
 
-        msg_box.exec_()
-
-        # בדיקה איזה כפתור נלחץ
-        if msg_box.clickedButton() == yes_button:
-
-#        if reply == QMessageBox.Yes:
+    # בדיקה איזה כפתור נלחץ
+        if result == QDialog.Accepted:
             self.download_and_install_update(download_url, new_version)
         else:
             # אם המשתמש בחר שלא לעדכן
@@ -3663,7 +3999,7 @@ class MainMenu(QWidget):
         QMessageBox.critical(
             self,
             "שגיאה בהורדת העדכון",
-            f"לא ניתן להוriד את העדכון:\n{error_msg}"
+            f"לא ניתן להוריד את העדכון:\n{error_msg}"
         )
 
 class AboutDialog(QDialog):
@@ -3672,6 +4008,7 @@ class AboutDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("אודות התוכנה")
         self.setLayoutDirection(Qt.RightToLeft)
+        self.setContentsMargins(50, 50, 50, 50)  # הוספת שוליים
         self.current_version = VERSION
         layout = QVBoxLayout()
 
@@ -3685,7 +4022,7 @@ class AboutDialog(QDialog):
         version_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(version_label)
 
-        date_label = QLabel("תאריך: כז אייר תשפה")
+        date_label = QLabel("תאריך: י סיון תשפה")
         date_label.setStyleSheet("font-size: 10pt;")
         date_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(date_label)
@@ -3716,7 +4053,7 @@ class AboutDialog(QDialog):
         drive_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(drive_label)
 
-        info_label = QLabel("אפשר לבקש את התוכנה\nוכן להירשם לקבלת עדכון במייל כשיוצא עדכון לתוכנות אלו\nוכן לקבל תמיכה וסיוע בכל הקשור לתוכנה זו ולתוכנת 'אוצריא'\nבמייל הבא:")
+        info_label = QLabel("אפשר לבקש את התוכנה\nוכן לקבל תמיכה וסיוע בכל הקשור לתוכנה זו ולתוכנת 'אוצריא'\nבמייל הבא:")
         info_label.setStyleSheet("font-size: 10pt;")
         info_label.setAlignment(Qt.AlignCenter)
         
@@ -3817,7 +4154,7 @@ class UpdateDownloader(QThread):
         return os.getcwd()
 
 class UpdateChecker(QThread):
-    update_available = pyqtSignal(str, str)  
+    update_available = pyqtSignal(str, str, str, str, int) # download_url, version, name, published_at, body
     no_update = pyqtSignal()  
     error = pyqtSignal(str)  
 
@@ -3899,29 +4236,33 @@ class UpdateChecker(QThread):
             
             latest_release = response.json()
             latest_version = latest_release['tag_name'].replace('v', '')
-            
+            published_at = latest_release.get('published_at', '')
+            release_body = latest_release.get('body', '')
+
             print(f"גרסה נוכחית: {self.current_version}")
             print(f"גרסה אחרונה: {latest_version}")
             
             if self._compare_versions(latest_version, self.current_version):
                 download_url = None
+                # חיפוש גודל הקובץ
+                file_size = None
                 for asset in latest_release['assets']:
                     if asset['name'].lower().endswith('.exe'):
                         download_url = asset['browser_download_url']
+                        file_size = asset.get('size', 0)  # גודל בבייטים
                         break
                 
                 if download_url:
-                    print("נמצאה גרסה חדשה!")
-                    self.update_available.emit(download_url, latest_version)
+                    self.update_available.emit(download_url, latest_version, published_at, release_body, file_size)
                 else:
-                    self.error.emit("נמצאה גרסה חדשה אך לא נמצא קובץ הורדה מתאים")
+                    self.error.emit("נמצאה גרסה חדשה, אך לא נמצא קובץ הורדה מתאים")
             else:
                 print("אין גרסה חדשה")
                 self.no_update.emit()
                 
         except requests.exceptions.ConnectionError as e:
             print(f"Connection Error: {str(e)}")
-            self.error.emit("בעיית חיבור לשרת GitHub. אנא בדוק את חיבור האינטרנט שלך")
+            self.error.emit("בעיית חיבור לשרת GitHub\nבדוק את חיבור האינטרנט שלך")
             
         except Exception as e:
             print(f"General Error: {str(e)}")
@@ -3966,6 +4307,9 @@ def main():
     app = QApplication.instance()
     if not app:
         app = QApplication(sys.argv)
+    app.setLayoutDirection(Qt.RightToLeft)    
+    enter_filter = EnterKeyFilter()
+    app.installEventFilter(enter_filter)
     main_menu = MainMenu()
     main_menu.show()
     sys.exit(app.exec_())
