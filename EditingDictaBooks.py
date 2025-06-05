@@ -131,7 +131,7 @@ class CreateHeadersOtZria(QWidget):
         self.end_var = QComboBox()
         self.end_var.addItems([str(i) for i in range(1, 1000)])
         self.end_var.setCurrentText("999")
-        self.end_var.setFixedWidth(65)
+        self.end_var.setFixedWidth(68)
         end_layout.addWidget(end_label)
         end_layout.addWidget(self.end_var)
         layout.addLayout(end_layout)
@@ -280,12 +280,28 @@ class CreateHeadersOtZria(QWidget):
 # ==========================================
 # Script 2: יצירת כותרות לאותיות בודדות
 # ==========================================
+
+# מסתיר חלק מהתפריט ב QLineEdit
+class AdvancedProtectedLineEdit(QLineEdit):
+    def __init__(self, hidden_prefix="", visible_text="", parent=None):
+        super().__init__(parent)
+        self.hidden_prefix = hidden_prefix
+        self.setText(visible_text)
+        
+    def get_full_text(self):
+        """מחזיר את הטקסט המלא כולל החלק המוסתר"""
+        return self.hidden_prefix + self.text()
+    
+    def get_visible_text(self):
+        """מחזיר רק את החלק הנראה"""
+        return self.text()
+    
 class CreateSingleLetterHeaders(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("יצירת כותרות לאותיות בודדות")
         self.setWindowIcon(self.load_icon_from_base64(icon_base64))
-        self.setGeometry(100, 100, 1100, 330)
+        self.setGeometry(100, 100, 1130, 350)
         self.setContentsMargins(30, 30, 30, 30)  # הוספת שוליים
         self.setLayoutDirection(Qt.RightToLeft)  # הגדרת כיוון ימין לשמאל
         self.init_ui()
@@ -313,22 +329,29 @@ class CreateSingleLetterHeaders(QWidget):
         self.start_var.addItems(["", "\u202B(", "\u202B["])
         #self.start_var.setStyleSheet("text-align: right;")  # מוודא שהטקסט ייושר לימין
         
-        end_char_label = QLabel("     תו/ים בסוף האות:")
+        end_char_label = QLabel("תו/ים בסוף האות:")
         self.finde_var = QComboBox()
         self.finde_var.addItems(['', '\u202B.', '\u202B,', "\u202B'", "\u202B',",
             "\u202B'.", '\u202B]', '\u202B)', "\u202B']", "\u202B')", "\u202B].",
             "\u202B).", "\u202B],", "\u202B),", "\u202B'),", "\u202B').", "\u202B'],", "\u202B']."])
-               
+        
+        # תיבת סימון לחיפוש עם תווי הדגשה בלבד
+        self.bold_var = QCheckBox("לחפש אותיות מודגשות בלבד")
+        self.bold_var.setChecked(True)
+        
         regex_layout = QHBoxLayout()
+        regex_layout.addWidget(self.bold_var)
+        regex_layout.addStretch()
         regex_layout.addWidget(start_char_label)
         regex_layout.addWidget(self.start_var)
+        regex_layout.addStretch()
         regex_layout.addWidget(end_char_label)
         regex_layout.addWidget(self.finde_var)
         layout.addLayout(regex_layout)
        
         # הסבר למשתמש
         explanation = QLabel(
-            "שים לב!\nהבחירה בברירת מחדל [השורה הריקה], משמעותה סימון כל האפשרויות."
+            "שים לב!\nהבחירה בברירת מחדל [השורה הריקה], משמעותה סימון כל האפשרויות"
         )
         explanation.setAlignment(Qt.AlignCenter)
         explanation.setStyleSheet("font-size: 18px;")
@@ -339,21 +362,15 @@ class CreateSingleLetterHeaders(QWidget):
         heading_layout = QHBoxLayout()
         heading_label = QLabel("רמת כותרת:")
         heading_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        heading_label.setStyleSheet("font-size: 20px;")
+        heading_label.setStyleSheet("font-size: 25px;")
         self.level_var = QComboBox()
         self.level_var.setFixedWidth(45)
-        self.level_var.setStyleSheet("font-size: 20px;")
+        self.level_var.setStyleSheet("font-size: 25px;")
         self.level_var.addItems([str(i) for i in range(2, 7)])
         self.level_var.setCurrentText("3")
         heading_layout.addWidget(heading_label)
         heading_layout.addWidget(self.level_var, alignment=Qt.AlignLeft | Qt.AlignVCenter)
-        
         layout.addLayout(heading_layout)
-
-        # תיבת סימון לחיפוש עם תווי הדגשה בלבד
-        self.bold_var = QCheckBox("לחפש עם תווי הדגשה בלבד")
-        self.bold_var.setChecked(True)
-        layout.addWidget(self.bold_var)
 
         # התעלם מהתווים
         ignore_layout = QHBoxLayout()
@@ -361,25 +378,40 @@ class CreateSingleLetterHeaders(QWidget):
         ignore_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.ignore_entry = QLineEdit()
         self.ignore_entry.setText('<big> </big> " ')
-        ignore_layout.addWidget(ignore_label)
-        ignore_layout.addWidget(self.ignore_entry)
-        layout.addLayout(ignore_layout)
 
         # הסרת תווים
-        remove_layout = QHBoxLayout()
-        remove_label = QLabel("הסר את התווים הבאים:")
-        remove_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        self.remove_entry = QLineEdit()
-        self.remove_entry.setText('<b> </b> <big> </big> , : " \' . ( ) [ ] { }')
-        remove_layout.addWidget(remove_label)
-        remove_layout.addWidget(self.remove_entry)
-        layout.addLayout(remove_layout)
+        remove_label = QLabel("הסר את התווים הבאים מהכותרות שיווצרו:")
+        hidden_chars = '<b> </b> <big> </big> <i> </i> <big> </small> </small> <span> </span> <br> </br>'
+        self.remove_entry = AdvancedProtectedLineEdit(
+            hidden_prefix=hidden_chars,
+            visible_text=', : " \' . ( ) [ ] { }')  # העבר את הטקסט כאן במקום setText
+        # self.remove_entry.setText(', : " \' . ( ) [ ] { }')
+        # self.remove_entry.setFixedWidth(180)
+        self.remove_entry.setStyleSheet("font-size: 20px;")
+
+        ignore_layout.addWidget(ignore_label)
+        ignore_layout.addWidget(self.ignore_entry)
+        ignore_layout.addStretch()      
+        ignore_layout.addWidget(remove_label)
+        ignore_layout.addWidget(self.remove_entry)  # , alignment=Qt.AlignLeft)
+
+        layout.addLayout(ignore_layout)
+
+        # הסבר למשתמש
+        explanation2 = QLabel(
+            "\"הסר את התווים\" נועד כדי ליצור כותרות 'נקיות', בלי תווים נוספים\n באם הנך רוצה להשאיר סימנים (כגון סימני סוגריים) "
+            "סביב הכותרות, או להשאיר גרש וגרשיים בתוך הכותרות, מחק תווים אלו משורה זו"
+        )
+        explanation2.setStyleSheet("font-size: 18px;")
+        explanation2.setWordWrap(True)
+        explanation2.setAlignment(Qt.AlignCenter)
+        layout.addWidget(explanation2)
 
         # מספר סימן מקסימלי
         end_layout = QHBoxLayout()
         end_label = QLabel("מספר סימן מקסימלי:")
         self.end_var = QComboBox()
-        self.end_var.setFixedWidth(65)
+        self.end_var.setFixedWidth(68)
         self.end_var.addItems([str(i) for i in range(1, 1000)])
         self.end_var.setCurrentText("999")
         end_layout.addWidget(end_label)
@@ -406,7 +438,7 @@ class CreateSingleLetterHeaders(QWidget):
     def run_script(self):
         book_file = self.file_entry.text()
         finde = self.finde_var.currentText()
-        remove = ["<b>", "</b>"] + self.remove_entry.text().split()
+        remove = ["<b>", "</b>"] + self.remove_entry.get_full_text().split()
         ignore = self.ignore_entry.text().split()
         start = self.start_var.currentText()
         is_bold_checked = self.bold_var.isChecked()
@@ -685,7 +717,7 @@ class ChangeHeadingLevel(QWidget):
         self.file_entry = QLineEdit()
         file_label = QLabel("נתיב קובץ:")
         file_label.setStyleSheet("font-size: 20px;")
-        self.file_entry.setStyleSheet("font-size: 20px;")   
+        self.file_entry.setStyleSheet("font-size: 20px;")
         file_layout.addWidget(file_label) 
         file_layout.addWidget(self.file_entry)
         file_layout.addWidget(browse_button)
