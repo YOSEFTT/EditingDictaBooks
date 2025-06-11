@@ -56,7 +56,7 @@ VERSION = "3.5.0"
 myappid = 'MIT.LEARN_PYQT.dictatootzaria'
 
 # מחרוזת Base64 של האייקון
-icon_base64 = "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"
+icon_base64 = "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"
 
 class EnterKeyFilter(QObject):
     def eventFilter(self, obj, event):
@@ -69,6 +69,10 @@ class EnterKeyFilter(QObject):
                 if not obj.view().isVisible():
                     obj.showPopup()
                     return True
+            elif isinstance(obj, QCheckBox) and obj.hasFocus():
+                # נשנה את מצב התיבת הסימון
+                obj.toggle()
+                return True                
         return super().eventFilter(obj, event)
     
 # ==========================================
@@ -322,25 +326,53 @@ class CreateSingleLetterHeaders(QWidget):
         file_layout.addWidget(browse_button)
         layout.addLayout(file_layout)
 
+        only_label = QLabel("חפש רק אם קיים:")
+        only_label.setStyleSheet("font-weight: bold;")
         # תו בתחילת האות ותו בסוף האות
-        start_char_label = QLabel("תו בתחילת האות:")
+        start_char_label = QLabel("תו לפני האות:")
         self.start_var = QComboBox()
-        #self.start_var.setLayoutDirection(Qt.RightToLeft)  # הגדרת כיוון כללי
-        self.start_var.addItems(["", "\u202B(", "\u202B["])
-        #self.start_var.setStyleSheet("text-align: right;")  # מוודא שהטקסט ייושר לימין
+        self.start_var.addItems(["", "(", "["])
+        self.start_var.setFixedWidth(50)
+        self.start_var.setEditable(True)  # מאפשר להקליד
+        self.start_var.setLayoutDirection(Qt.RightToLeft)
+        # הגדר RLM כברירת מחדל
+        self.start_var.setCurrentText('\u200F')
+        def maintain_rtl():
+            text = self.start_var.currentText()
+            if not text.startswith('\u200F'):
+                cursor_pos = self.start_var.lineEdit().cursorPosition()
+                self.start_var.setCurrentText('\u200F' + text)
+                self.start_var.lineEdit().setCursorPosition(cursor_pos + 1)
+        self.start_var.editTextChanged.connect(maintain_rtl)
         
-        end_char_label = QLabel("תו/ים בסוף האות:")
+        end_char_label = QLabel("תו/ים אחרי האות:")
         self.finde_var = QComboBox()
-        self.finde_var.addItems(['', '\u202B.', '\u202B,', "\u202B'", "\u202B',",
-            "\u202B'.", '\u202B]', '\u202B)', "\u202B']", "\u202B')", "\u202B].",
-            "\u202B).", "\u202B],", "\u202B),", "\u202B'),", "\u202B').", "\u202B'],", "\u202B']."])
-        
+        self.finde_var.addItems(['', '.', ',', "'", "',",
+            "'.", ']', ')', "']", "')", "].",
+            ").", "],", "),", "'),", "').", "'],", "']."])
+        self.finde_var.setFixedWidth(65)
+        self.finde_var.setEditable(True)  # מאפשר להקליד
+        self.finde_var.setLayoutDirection(Qt.RightToLeft)
+        # הגדר RLM כברירת מחדל
+        self.finde_var.setCurrentText('\u200F')
+        def maintain_rtl():
+            text = self.finde_var.currentText()
+            if not text.startswith('\u200F'):
+                cursor_pos = self.finde_var.lineEdit().cursorPosition()
+                self.finde_var.setCurrentText('\u200F' + text)
+                self.finde_var.lineEdit().setCursorPosition(cursor_pos + 1)
+        self.finde_var.editTextChanged.connect(maintain_rtl)
+
         # תיבת סימון לחיפוש עם תווי הדגשה בלבד
         self.bold_var = QCheckBox("לחפש אותיות מודגשות בלבד")
         self.bold_var.setChecked(True)
         
         regex_layout = QHBoxLayout()
         regex_layout.addWidget(self.bold_var)
+        regex_layout.addStretch()
+        regex_layout.addStretch()
+        regex_layout.addStretch()
+        regex_layout.addWidget(only_label)
         regex_layout.addStretch()
         regex_layout.addWidget(start_char_label)
         regex_layout.addWidget(self.start_var)
@@ -351,7 +383,7 @@ class CreateSingleLetterHeaders(QWidget):
        
         # הסבר למשתמש
         explanation = QLabel(
-            "שים לב!\nהבחירה בברירת מחדל [השורה הריקה], משמעותה סימון כל האפשרויות"
+            "שים לב! הבחירה בברירת מחדל [האפשרות הראשונה הריקה], משמעותה סימון כל סוגי התווים שלפני ואחרי הכותרות"
         )
         explanation.setAlignment(Qt.AlignCenter)
         explanation.setStyleSheet("font-size: 18px;")
@@ -362,10 +394,10 @@ class CreateSingleLetterHeaders(QWidget):
         heading_layout = QHBoxLayout()
         heading_label = QLabel("רמת כותרת:")
         heading_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        heading_label.setStyleSheet("font-size: 25px;")
+        heading_label.setStyleSheet("font-size: 30px;")
         self.level_var = QComboBox()
         self.level_var.setFixedWidth(45)
-        self.level_var.setStyleSheet("font-size: 25px;")
+        self.level_var.setStyleSheet("font-size: 30px;")
         self.level_var.addItems([str(i) for i in range(2, 7)])
         self.level_var.setCurrentText("3")
         heading_layout.addWidget(heading_label)
@@ -377,29 +409,32 @@ class CreateSingleLetterHeaders(QWidget):
         ignore_label = QLabel("התעלם מהתווים הבאים:")
         ignore_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.ignore_entry = QLineEdit()
-        self.ignore_entry.setText('<big> </big> " ')
+        self.ignore_entry.setText('<b> </b> <big> </big> <i> </i> </small> </small> <span> </span> <br> </br> <p> </p>')
 
         # הסרת תווים
         remove_label = QLabel("הסר את התווים הבאים מהכותרות שיווצרו:")
-        hidden_chars = '<b> </b> <big> </big> <i> </i> <big> </small> </small> <span> </span> <br> </br>'
+        hidden_chars = '<b> </b> <big> </big> <i> </i> </small> </small> <span> </span> <br> </br> <p> </p>'
         self.remove_entry = AdvancedProtectedLineEdit(
             hidden_prefix=hidden_chars,
-            visible_text=', : " \' . ( ) [ ] { }')  # העבר את הטקסט כאן במקום setText
+            visible_text='( ) [ ] { } : \' ’ " ” ״ . , ;')  # העבר את הטקסט כאן במקום setText
         # self.remove_entry.setText(', : " \' . ( ) [ ] { }')
         # self.remove_entry.setFixedWidth(180)
         self.remove_entry.setStyleSheet("font-size: 20px;")
 
-        ignore_layout.addWidget(ignore_label)
-        ignore_layout.addWidget(self.ignore_entry)
-        ignore_layout.addStretch()      
+        explanation3 = QLabel("נועד כדי ליצור כותרות 'נקיות', בלי תווים נוספים")
+
+        # ignore_layout.addWidget(ignore_label)
+        # ignore_layout.addWidget(self.ignore_entry)
+        # ignore_layout.addStretch()
         ignore_layout.addWidget(remove_label)
         ignore_layout.addWidget(self.remove_entry)  # , alignment=Qt.AlignLeft)
-
+        ignore_layout.addStretch()
+        ignore_layout.addWidget(explanation3)
         layout.addLayout(ignore_layout)
 
         # הסבר למשתמש
         explanation2 = QLabel(
-            "\"הסר את התווים\" נועד כדי ליצור כותרות 'נקיות', בלי תווים נוספים\n באם הנך רוצה להשאיר סימנים (כגון סימני סוגריים) "
+            "באם הנך רוצה להשאיר סימנים (כגון סימני סוגריים) "
             "סביב הכותרות, או להשאיר גרש וגרשיים בתוך הכותרות, מחק תווים אלו משורה זו"
         )
         explanation2.setStyleSheet("font-size: 18px;")
@@ -467,7 +502,7 @@ class CreateSingleLetterHeaders(QWidget):
             QMessageBox.critical(self, "שגיאה", f"אירעה שגיאה: {e}")
 
     def ot(self, text, end):
-        remove = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’"]
+        remove = ["<b>", "</b>", "<big>", "</big>", "<i>", "</i>", "</small>", "</small>", "<span>", "</span>", "<br>", "</br>", "<p>", "</p>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’"]
         aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יו", "קיה", "קיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
         cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "חי", "יוד", "למד", "נון", "טל", "דש", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערה", "ערב", "עדר", "רחצ"]
@@ -1423,7 +1458,7 @@ class בדיקת_שגיאות_בכותרות(QWidget):
 
         # יצירת label לרמות חסרות
         self.missing_levels_label = QLabel("")
-        self.missing_levels_label.setStyleSheet("font-size: 14px; margin-top: 5px;")
+        self.missing_levels_label.setStyleSheet("font-size: 14px;")
         self.missing_levels_label.hide()  # מוסתר בהתחלה
 
         # יצירת QTextEdit והגדרותיהם
@@ -1445,11 +1480,10 @@ class בדיקת_שגיאות_בכותרות(QWidget):
 
         # הוספת המכולות ל־QSplitter אנכי
         v_splitter = QSplitter(Qt.Vertical)
-        v_splitter.setStyleSheet("QSplitter::handle { background-color: gray; }")
         v_splitter.setHandleWidth(1)               # מגדיר רוחב לפס הגרירה כדי שיהיה ברור
         v_splitter.setStyleSheet("""
             QSplitter::handle:vertical {
-                background-color: black;
+                background-color: gray;
                 height: 0.01px;
                 width: 100%;
             }
@@ -1478,9 +1512,9 @@ class בדיקת_שגיאות_בכותרות(QWidget):
         else:
             levels_str = ", ".join(map(str, missing_levels))
             if len(missing_levels) == 1:
-                text = f"אין בקובץ כותרת ברמה {levels_str}"
+                text = f"מידע: אין בקובץ כותרת ברמה {levels_str}"
             else:
-                text = f"אין בקובץ כותרות ברמות: {levels_str}"
+                text = f"מידע: אין בקובץ כותרות ברמות - {levels_str}"
             self.missing_levels_label.setText(text)
             self.missing_levels_label.show()
 
@@ -1567,7 +1601,7 @@ class בדיקת_שגיאות_בכותרות(QWidget):
 
                 # בדיקה אם הכותרות הן ברצף
                 if not gematriapy.to_number(current_heading) + 1 == gematriapy.to_number(next_heading):
-                    unmatched_tags.append(f"כותרת נוכחית - {current_tag}, כותרת הבאה - {next_tag}")
+                    unmatched_tags.append(f"כותרת נוכחית - {current_tag} || כותרת הבאה - {next_tag}")
 
             # עיבוד התג האחרון
             last_tag = tags[-1].string or ""
@@ -1940,7 +1974,7 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 
         # יצירת label לרמות חסרות
         self.missing_levels_label = QLabel("")
-        self.missing_levels_label.setStyleSheet("font-size: 14px; margin-top: 5px;")
+        self.missing_levels_label.setStyleSheet("font-size: 14px;")
         self.missing_levels_label.hide()  # מוסתר בהתחלה
 
         # יצירת QTextEdit והגדרותיהם
@@ -1962,11 +1996,10 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 
         # הוספת המכולות ל־QSplitter אנכי
         v_splitter = QSplitter(Qt.Vertical)
-        v_splitter.setStyleSheet("QSplitter::handle { background-color: gray; }")
         v_splitter.setHandleWidth(1)  # עובי handle לפי בחירתך
         v_splitter.setStyleSheet("""
             QSplitter::handle:vertical {
-                background-color: black;
+                background-color: gray;
                 height: 0.01px;
                 width: 100%;
             }
@@ -1995,9 +2028,9 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
         else:
             levels_str = ", ".join(map(str, missing_levels))
             if len(missing_levels) == 1:
-                text = f"אין בקובץ כותרת ברמה {levels_str}"
+                text = f"מידע: אין בקובץ כותרת ברמה {levels_str}"
             else:
-                text = f"אין בקובץ כותרות ברמות: {levels_str}"
+                text = f"מידע: אין בקובץ כותרות ברמות - {levels_str}"
             self.missing_levels_label.setText(text)
             self.missing_levels_label.show()
 
@@ -2097,7 +2130,7 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 
                 # בדיקה אם הכותרות הן ברצף
                 if not gematriapy.to_number(current_heading) + 1 == gematriapy.to_number(next_heading):
-                    unmatched_tags.append(f"כותרת נוכחית - {current_tag}, כותרת הבאה - {next_tag}")
+                    unmatched_tags.append(f"כותרת נוכחית - {current_tag} || כותרת הבאה - {next_tag}")
 
             # עיבוד התג האחרון
             if len(tags) >= 2:
