@@ -1380,7 +1380,6 @@ def create_labeled_widget_2(label_text, widget, extra_label):
     v_layout.addWidget(extra_label)
     container.setLayout(v_layout)
     return container
-
 # ------------------ מחלקה ראשונה: בדיקת שגיאות בכותרות ------------------ #
 class בדיקת_שגיאות_בכותרות(QWidget):
     def __init__(self, parent=None):
@@ -1423,7 +1422,7 @@ class בדיקת_שגיאות_בכותרות(QWidget):
 
         # יצירת label לרמות חסרות
         self.missing_levels_label = QLabel("")
-        self.missing_levels_label.setStyleSheet("font-size: 14px; margin-top: 5px;")
+        self.missing_levels_label.setStyleSheet("font-size: 14px; color: red; margin-top: 5px;")
         self.missing_levels_label.hide()  # מוסתר בהתחלה
 
         # יצירת QTextEdit והגדרותיהם
@@ -1938,10 +1937,6 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 
         self.gershayim_var = QCheckBox("הגדר גרש/ים כתקינים")
 
-        # יצירת label לרמות חסרות
-        self.missing_levels_label = QLabel("")
-        self.missing_levels_label.setStyleSheet("font-size: 14px; margin-top: 5px;")
-        self.missing_levels_label.hide()  # מוסתר בהתחלה
 
         # יצירת QTextEdit והגדרותיהם
         self.unmatched_regex_text = QTextEdit()
@@ -1956,13 +1951,13 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
         # עטיפת כל ווידג'ט במכולה עם תווית מעליו
         regex_container = create_labeled_widget(
             "\nכותרות שיש בהן תווים מיותרים (חוץ ממה שנכתב בתיבות הבחירה למטה)\nכגון: גרש/ים, פסיק, נקודה, נקודותיים. או רווח לפני הכותרת או לאחרי'.",
-            self.unmatched_regex_text)
-            
-        tags_container = create_labeled_widget_2("כותרות שאינן לפי הסדר\nהתוכנה מדלגת בבדיקה בכל פעם על כותרת אחת, בגלל הכותרות הכפולות של עמוד ב", self.unmatched_tags_text, self.missing_levels_label)
+            self.unmatched_regex_text
+        )
+        tags_container = create_labeled_widget("כותרות שאינן לפי הסדר\nהתוכנה מדלגת בבדיקה בכל פעם על כותרת אחת, בגלל הכותרות הכפולות של עמוד ב", self.unmatched_tags_text)
 
         # הוספת המכולות ל־QSplitter אנכי
         v_splitter = QSplitter(Qt.Vertical)
-        v_splitter.setStyleSheet("QSplitter::handle { background-color: gray; }")
+        litter.setStyleSheet("QSplitter::handle { background-color: gray; }")
         v_splitter.setHandleWidth(1)  # עובי handle לפי בחירתך
         v_splitter.setStyleSheet("""
             QSplitter::handle:vertical {
@@ -1972,7 +1967,6 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
             }
         """)
         v_splitter.addWidget(tags_container)
-        v_splitter.addWidget(self.missing_levels_label)
         v_splitter.addWidget(regex_container)
         
         # הוספת ה־splitter ל-layout הראשי
@@ -1987,19 +1981,6 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
         layout.addLayout(regex_layout)
 
         self.setLayout(layout)
-
-    def update_missing_levels_label(self, missing_levels):
-        if not missing_levels:
-            self.missing_levels_label.setText("")
-            self.missing_levels_label.hide()
-        else:
-            levels_str = ", ".join(map(str, missing_levels))
-            if len(missing_levels) == 1:
-                text = f"אין בקובץ כותרת ברמה {levels_str}"
-            else:
-                text = f"אין בקובץ כותרות ברמות: {levels_str}"
-            self.missing_levels_label.setText(text)
-            self.missing_levels_label.show()
 
     def load_file_and_process(self, file_path):
         """
@@ -2016,12 +1997,9 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
         re_end = self.re_end_entry.text()
         gershayim = self.gershayim_var.isChecked()
 
-        unmatched_regex, unmatched_tags, missing_levels = self.process_html(html_content, re_start, re_end, gershayim)
+        unmatched_regex, unmatched_tags = self.process_html(html_content, re_start, re_end, gershayim)
         self.unmatched_regex_text.setPlainText("\n".join(unmatched_regex))
         self.unmatched_tags_text.setPlainText("\n".join(unmatched_tags))
-
-        # עדכון ה-label של הרמות החסרות
-        self.update_missing_levels_label(missing_levels)        
 
     def process_html(self, html_content, re_start, re_end, gershayim):
         soup = BeautifulSoup(html_content, 'html.parser')
@@ -2039,7 +2017,6 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 
         unmatched_regex = []
         unmatched_tags = []
-        missing_levels = []  # רשימה חדשה לרמות חסרות
 
         # נעבור על תגי כותרות h2 עד h6
         for i in range(2, 7):
@@ -2047,17 +2024,8 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 
             # בדיקה אם נמצאו תגים
             if not tags:
-                missing_levels.append(i)  # הוספה לרשימת הרמות החסרות
+                unmatched_tags.append(f"מידע: אין בקובץ כותרות ברמה {i}")
                 continue
-
-            # עיבוד כל התגים למעט האחרון
-            for index in range(len(tags) - 1):
-                current_tag = tags[index].string or ""
-                next_tag = tags[index + 1].string or ""
-
-                # וידוא שהמחרוזות של התגים אינן ריקות
-                if not current_tag or not next_tag:
-                    continue
 
             # עיבוד כל התגים למעט האחרון
             for index in range(len(tags) - 2):
@@ -2126,7 +2094,7 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
             if "'" in last_heading or '"' in last_heading:
                 unmatched_tags.append(last_heading)
 
-        return unmatched_regex, unmatched_tags, missing_levels
+        return unmatched_regex, unmatched_tags
 
 # ------------------ מחלקה שנייה: בדיקת שגיאות בעיצוב (תגים וכו') ------------------ #
 # class בדיקת_שגיאות_בתגים_לשס(QWidget):
