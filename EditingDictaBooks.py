@@ -4067,7 +4067,7 @@ class AboutDialog(QDialog):
         layout.addWidget(mitmachimtop_label)
 
         # קישור ל-דרייב
-        drive_label = QLabel('או בדרייב: <a href="http://did.li/otzaria-">כאן</a> או <a href="https://drive.google.com/open?id=1KEKudpCJUiK6Y0Eg44PD6cmbRsee1nRO&usp=drive_fs">כאן</a>')
+        drive_label = QLabel('או בדרייב: <a href="http://did.li/dicta-library">כאן</a> או <a href="https://drive.google.com/open?id=1Sqj3sCyYJnVB60KAZxgmDNO7x52qoVm6&usp=drive_fs">כאן</a>')
         drive_label.setStyleSheet("font-size: 10pt;")
         drive_label.setOpenExternalLinks(True)
         drive_label.setAlignment(Qt.AlignCenter)
