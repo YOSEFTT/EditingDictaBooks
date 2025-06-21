@@ -299,6 +299,9 @@ class AdvancedProtectedLineEdit(QLineEdit):
     def get_visible_text(self):
         """מחזיר רק את החלק הנראה"""
         return self.text()
+"""
+לכתוב 
+"""
     
 class CreateSingleLetterHeaders(QWidget):
     def __init__(self):
@@ -328,41 +331,20 @@ class CreateSingleLetterHeaders(QWidget):
 
         only_label = QLabel("חפש רק אם קיים:")
         only_label.setStyleSheet("font-weight: bold;")
+
         # תו בתחילת האות ותו בסוף האות
-        start_char_label = QLabel("תו לפני האות:")
+        start_char_label = QLabel("תו בתחילת האות:")
         self.start_var = QComboBox()
+        #self.start_var.setLayoutDirection(Qt.RightToLeft)  # הגדרת כיוון כללי
         self.start_var.addItems(["", "(", "["])
-        self.start_var.setFixedWidth(50)
-        self.start_var.setEditable(True)  # מאפשר להקליד
-        self.start_var.setLayoutDirection(Qt.RightToLeft)
-        # הגדר RLM כברירת מחדל
-        self.start_var.setCurrentText('\u200F')
-        def maintain_rtl():
-            text = self.start_var.currentText()
-            if not text.startswith('\u200F'):
-                cursor_pos = self.start_var.lineEdit().cursorPosition()
-                self.start_var.setCurrentText('\u200F' + text)
-                self.start_var.lineEdit().setCursorPosition(cursor_pos + 1)
-        self.start_var.editTextChanged.connect(maintain_rtl)
+        #self.start_var.setStyleSheet("text-align: right;")  # מוודא שהטקסט ייושר לימין
         
-        end_char_label = QLabel("תו/ים אחרי האות:")
+        end_char_label = QLabel("תו/ים בסוף האות:")
         self.finde_var = QComboBox()
         self.finde_var.addItems(['', '.', ',', "'", "',",
             "'.", ']', ')', "']", "')", "].",
-            ").", "],", "),", "'),", "').", "'],", "']."])
-        self.finde_var.setFixedWidth(65)
-        self.finde_var.setEditable(True)  # מאפשר להקליד
-        self.finde_var.setLayoutDirection(Qt.RightToLeft)
-        # הגדר RLM כברירת מחדל
-        self.finde_var.setCurrentText('\u200F')
-        def maintain_rtl():
-            text = self.finde_var.currentText()
-            if not text.startswith('\u200F'):
-                cursor_pos = self.finde_var.lineEdit().cursorPosition()
-                self.finde_var.setCurrentText('\u200F' + text)
-                self.finde_var.lineEdit().setCursorPosition(cursor_pos + 1)
-        self.finde_var.editTextChanged.connect(maintain_rtl)
-
+            ").", "],", "),", "'),", "').", "'],", "']."]) 
+        
         # תיבת סימון לחיפוש עם תווי הדגשה בלבד
         self.bold_var = QCheckBox("לחפש אותיות מודגשות בלבד")
         self.bold_var.setChecked(True)
@@ -405,32 +387,37 @@ class CreateSingleLetterHeaders(QWidget):
         layout.addLayout(heading_layout)
 
         # התעלם מהתווים
-        ignore_layout = QHBoxLayout()
+        ignore_remove_layout = QHBoxLayout()
         ignore_label = QLabel("התעלם מהתווים הבאים:")
         ignore_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.ignore_entry = QLineEdit()
-        self.ignore_entry.setText('<b> </b> <big> </big> <i> </i> </small> </small> <span> </span> <br> </br> <p> </p>')
+        self.ignore_entry.setText('<big> </big> <i> </i> </small> </small> <span> </span> <br> </br> <p> </p>')
+        self.ignore_entry.setStyleSheet("font-size: 20px;")
 
         # הסרת תווים
         remove_label = QLabel("הסר את התווים הבאים מהכותרות שיווצרו:")
-        hidden_chars = '<b> </b> <big> </big> <i> </i> </small> </small> <span> </span> <br> </br> <p> </p>'
-        self.remove_entry = AdvancedProtectedLineEdit(
-            hidden_prefix=hidden_chars,
-            visible_text='( ) [ ] { } : \' ’ " ” ״ . , ;')  # העבר את הטקסט כאן במקום setText
-        # self.remove_entry.setText(', : " \' . ( ) [ ] { }')
-        # self.remove_entry.setFixedWidth(180)
+        self.remove_entry = QLineEdit()
+        self.remove_entry.setText(', : " \' . ( ) [ ] { }')
         self.remove_entry.setStyleSheet("font-size: 20px;")
+
+        # hidden_chars = '<b> </b> <big> </big> <i> </i> </small> </small> <span> </span> <br> </br> <p> </p>'
+        # self.remove_entry = AdvancedProtectedLineEdit(
+        #     hidden_prefix=hidden_chars,
+        #     visible_text='( ) [ ] { } : \' ’ " ” ״ . , ;')  # העבר את הטקסט כאן במקום setText
+        # # self.remove_entry.setText(', : " \' . ( ) [ ] { }')
+        # # self.remove_entry.setFixedWidth(180)
+        # self.remove_entry.setStyleSheet("font-size: 20px;")
 
         explanation3 = QLabel("נועד כדי ליצור כותרות 'נקיות', בלי תווים נוספים")
 
         # ignore_layout.addWidget(ignore_label)
         # ignore_layout.addWidget(self.ignore_entry)
         # ignore_layout.addStretch()
-        ignore_layout.addWidget(remove_label)
-        ignore_layout.addWidget(self.remove_entry)  # , alignment=Qt.AlignLeft)
-        ignore_layout.addStretch()
-        ignore_layout.addWidget(explanation3)
-        layout.addLayout(ignore_layout)
+        ignore_remove_layout.addWidget(remove_label)
+        ignore_remove_layout.addWidget(self.remove_entry)  # , alignment=Qt.AlignLeft)
+        ignore_remove_layout.addStretch()
+        ignore_remove_layout.addWidget(explanation3)
+        layout.addLayout(ignore_remove_layout)
 
         # הסבר למשתמש
         explanation2 = QLabel(
@@ -473,7 +460,7 @@ class CreateSingleLetterHeaders(QWidget):
     def run_script(self):
         book_file = self.file_entry.text()
         finde = self.finde_var.currentText()
-        remove = ["<b>", "</b>"] + self.remove_entry.get_full_text().split()
+        remove = ["<b>", "</b>", "<big>", "</big>", "<i>", "</i>", "</small>", "</small>", "<span>", "</span>", "<br>", "</br>", "<p>", "</p>"] + self.remove_entry.text().split()
         ignore = self.ignore_entry.text().split()
         start = self.start_var.currentText()
         is_bold_checked = self.bold_var.isChecked()
@@ -502,7 +489,7 @@ class CreateSingleLetterHeaders(QWidget):
             QMessageBox.critical(self, "שגיאה", f"אירעה שגיאה: {e}")
 
     def ot(self, text, end):
-        remove = ["<b>", "</b>", "<big>", "</big>", "<i>", "</i>", "</small>", "</small>", "<span>", "</span>", "<br>", "</br>", "<p>", "</p>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’"]
+        remove = ["<b>", "</b>", "<big>", "</big>", "<i>", "</i>", "</small>", "</small>", "<span>", "</span>", "<br>", "</br>", "<p>", "</p>", ":", '"', ",", ";", "[", "]", "(", ")", "{", "}", "'", ".", "״", "”", "’"]
         aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יו", "קיה", "קיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
         cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "חי", "יוד", "למד", "נון", "טל", "דש", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערה", "ערב", "עדר", "רחצ"]
@@ -1542,11 +1529,11 @@ class בדיקת_שגיאות_בכותרות(QWidget):
 
         # קומפילציה של תבנית Regex לפי קלט המשתמש
         if re_start and re_end:
-            pattern = re.compile(f"^[{re_start}]*[א-ת]([א-ת \-]*[א-ת])?[{re_end}]*$")
+            pattern = re.compile(f"^[{re.escape(re_start)}]*[א-ת]([א-ת \-]*[א-ת])?[{re.escape(re_end)}]*$")
         elif re_start:
-            pattern = re.compile(f"^[{re_start}]*[א-ת]([א-ת \-]*[א-ת])?$")
+            pattern = re.compile(f"^[{re.escape(re_start)}]*[א-ת]([א-ת \-]*[א-ת])?$")
         elif re_end:
-            pattern = re.compile(f"^[א-ת]([א-ת \-]*[א-ת])?[{re_end}]*$")
+            pattern = re.compile(f"^[א-ת]([א-ת \-]*[א-ת])?[{re.escape(re_end)}]*$")
         else:
             pattern = re.compile(r"^[א-ת]([א-ת \-]*[א-ת])?$")
 
@@ -2061,11 +2048,11 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
 
         # קומפילציה של תבנית Regex לפי קלט המשתמש
         if re_start and re_end:
-            pattern = re.compile(f"^[{re_start}]*[א-ת]([א-ת \-]*[א-ת])?[{re_end}]*$")
+            pattern = re.compile(f"^[{re.escape(re_start)}]*[א-ת]([א-ת \-]*[א-ת])?[{re.escape(re_end)}]*$")
         elif re_start:
-            pattern = re.compile(f"^[{re_start}]*[א-ת]([א-ת \-]*[א-ת])?$")
+            pattern = re.compile(f"^[{re.escape(re_start)}]*[א-ת]([א-ת \-]*[א-ת])?$")
         elif re_end:
-            pattern = re.compile(f"^[א-ת]([א-ת \-]*[א-ת])?[{re_end}]*$")
+            pattern = re.compile(f"^[א-ת]([א-ת \-]*[א-ת])?[{re.escape(re_end)}]*$")
         else:
             pattern = re.compile(r"^[א-ת]([א-ת \-]*[א-ת])?$")
 
@@ -2160,117 +2147,6 @@ class בדיקת_שגיאות_בכותרות_לשס(QWidget):
                 unmatched_tags.append(last_heading)
 
         return unmatched_regex, unmatched_tags, missing_levels
-
-# ------------------ מחלקה שנייה: בדיקת שגיאות בעיצוב (תגים וכו') ------------------ #
-# class בדיקת_שגיאות_בתגים_לשס(QWidget):
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.setWindowTitle("בודק שגיאות בעיצוב")
-#         self.init_ui()
-
-#     def init_ui(self):
-#         main_layout = QVBoxLayout()
-
-#         # יצירת תיבות טקסט והגדרותיהם
-#         self.opening_without_closing = QTextEdit()
-#         self.opening_without_closing.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-#         self.opening_without_closing.setReadOnly(True)
-
-#         self.closing_without_opening = QTextEdit()
-#         self.closing_without_opening.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-#         self.closing_without_opening.setReadOnly(True)
-
-#         self.heading_errors = QTextEdit()
-#         self.heading_errors.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-#         self.heading_errors.setReadOnly(True)
-
-#         # עטיפת כל ווידג'ט במכולה עם תווית
-#         opening_container = create_labeled_widget("תגים פותחים ללא תגים סוגרים", self.opening_without_closing)
-#         closing_container = create_labeled_widget("תגים סוגרים ללא תגים פותחים", self.closing_without_opening)
-#         heading_container = create_labeled_widget("טקסט שאינו חלק מכותרת, שנמצא באותה שורה עם הכותרת", self.heading_errors)
-
-#         # יצירת QSplitter אנכי
-#         v_splitter_tags = QSplitter(Qt.Vertical)
-#         v_splitter_tags.setHandleWidth(10)
-#         v_splitter_tags.addWidget(opening_container)
-#         v_splitter_tags.addWidget(closing_container)
-#         v_splitter_tags.addWidget(heading_container)
-
-#         # הוספת QSplitter ל-layout הראשי
-#         main_layout.addWidget(v_splitter_tags)
-
-#         self.setLayout(main_layout)
-        
-
-#     def load_file_and_check(self, file_path):
-#         """
-#         פונקציה זו תחליף את select_file מהסקריפט המקורי.
-#         תקבל נתיב קובץ ותבצע את כל הבדיקות.
-#         """
-#         # ניקוי תוצאות קודמות
-#         self.opening_without_closing.clear()
-#         self.closing_without_opening.clear()
-#         self.heading_errors.clear()
-
-#         try:
-#             with open(file_path, 'r', encoding='utf-8') as file:
-#                 lines = file.readlines()
-#         except Exception as e:
-#             return
-
-#         open_tags = ["b", "big", "i", "small", "h2", "h3", "h4", "h5", "h6"]
-#         opening_without_closing_list = []
-#         closing_without_opening_list = []
-#         heading_errors_list = []
-
-#         for line_number, line in enumerate(lines, start=1):
-#             # מציאת כל התגים הפותחים והסוגרים
-#             tags_in_line = re.findall(r'<(/?\w+)>', line)
-#             stack = []
-
-        #     for tag in tags_in_line:
-        #         if not tag.startswith('/'):  # תג פותח
-        #             stack.append(tag)
-        #         else:  # תג סוגר
-        #             if stack and stack[-1] == tag[1:]:  # תג תואם במחסנית
-        #                 stack.pop()
-        #             else:  # תג סוגר בלי פתיחה תואמת
-        #                 closing_without_opening_list.append(
-        #                     f"שורה {line_number}: </{tag[1:]}> || {line.strip()}"
-        #                 )
-
-        #     # לאחר מעבר על כל התגים בשורה, כל מה שנשאר במחסנית הוא תגים פותחים ללא סגירה
-        #     for unclosed_tag in stack:
-        #         opening_without_closing_list.append(
-        #             f"שורה {line_number}: <{unclosed_tag}> || {line.strip()}"
-        #         )
-
-        #     # בדיקה לכותרת המכילה טקסט נוסף
-        #     for tag in ["h2", "h3", "h4", "h5", "h6"]:
-        #         heading_pattern = rf'<{tag}>.*?</{tag}>'
-        #         heading_match = re.search(heading_pattern, line)
-        #         if heading_match:
-        #             start, end = heading_match.span()
-        #             before = line[:start].strip()
-        #             after = line[end:].strip()
-        #             if before or after:
-        #                 heading_errors_list.append(f"שורה {line_number}: {line.strip()}")
-
-        # # הצגת תוצאות
-        # if opening_without_closing_list:
-        #     self.opening_without_closing.setPlainText("\n".join(opening_without_closing_list))
-        # else:
-        #     self.opening_without_closing.setPlainText("לא נמצאו שגיאות")
-
-        # if closing_without_opening_list:
-        #     self.closing_without_opening.setPlainText("\n".join(closing_without_opening_list))
-        # else:
-        #     self.closing_without_opening.setPlainText("לא נמצאו שגיאות")
-
-        # if heading_errors_list:
-        #     self.heading_errors.setPlainText("\n".join(heading_errors_list))
-        # else:
-        #     self.heading_errors.setPlainText("לא נמצאו שגיאות")
 
 # ------------------ חלון משולב שמאחד את שתי המחלקות ------------------ #
 class CheckHeadingErrorsCustom(QWidget):
@@ -2765,7 +2641,7 @@ class TextCleanerApp(QWidget):
             if self.checkBoxes["remove_spaces_before"].isChecked():
                 text = re.sub(r'[ \t]+([\)\],.:])', r'\1', text)
             if self.checkBoxes["remove_spaces_after"].isChecked():
-                text = re.sub(r'([\[\(])\s+', r'\1', text)
+                text = re.sub(r'(?<=\s|^)([\[\(])\s+', r'\1', text, flags=re.MULTILINE)
             if self.checkBoxes["remove_spaces_around_newlines"].isChecked():
                 text = re.sub(r'\s*\n\s*', '\n', text)
             if self.checkBoxes["replace_double_quotes"].isChecked():
