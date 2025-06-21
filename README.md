@@ -21,6 +21,7 @@
 <p>
   ניתן גם להוריד מהדרייב [לחסומים] או <a href="http://did.li/dicta-library">מכאן</a> או <a href="https://drive.google.com/open?id=1Sqj3sCyYJnVB60KAZxgmDNO7x52qoVm6&usp=drive_fs">מכאן</a>
 </p>
+
 # תרומת קוד
 תרומות קוד יתקבלו בברכה גדולה! אנא פתחו Pull Request עם השינויים שלכם.
 
