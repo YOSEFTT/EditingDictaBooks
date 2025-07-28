@@ -1881,10 +1881,11 @@ class CheckHeadingErrorsOriginal(QWidget):
             return
 
         # בדיקה עבור המחרוזת "ציור בספר"
-        count = content.count("ציור בספר")
-        if count > 0:
-            text = (f'שים לב! יש בספר {count} ציורים.\n'
-                    'חפש בתוך הספר את המילים "ציור בספר",\n'
+        patterns = ["ציור בספר", "$$ ציור $$", "$$ציור$$", "$$ ציור", "ציור $$", "ציור$$", "$$ציור"]
+        total_count = sum(content.count(pattern) for pattern in patterns)
+        if total_count > 0:
+            text = (f'שים לב! יש בספר {total_count} ציורים.\n'
+                    'חפש בתוך הספר את המילים "ציור בספר", או את התווים: "$$",\n'
                     'הורד את הספר מהיברובוקס, עשה צילום מסך לתמונה,\n'
                     'והמר אותה לטקסט ע"י תוכנה מספר 10')
             self.pic_count_label.setText(text)
@@ -2286,10 +2287,11 @@ class CheckHeadingErrorsCustom(QWidget):
             return
 
         # בדיקה עבור המחרוזת "ציור בספר"
-        count = content.count("ציור בספר")
-        if count > 0:
-            text = (f'שים לב! יש בספר {count} ציורים.\n'
-                    'חפש בתוך הספר את המילים "ציור בספר",\n'
+        patterns = ["ציור בספר", "$$ ציור $$", "$$ציור$$", "$$ ציור", "ציור $$", "ציור$$", "$$ציור"]
+        total_count = sum(content.count(pattern) for pattern in patterns)
+        if total_count > 0:
+            text = (f'שים לב! יש בספר {total_count} ציורים.\n'
+                    'חפש בתוך הספר את המילים "ציור בספר", או את התווים: "$$",\n'
                     'הורד את הספר מהיברובוקס, עשה צילום מסך לתמונה,\n'
                     'והמר אותה לטקסט ע"י תוכנה מספר 10')
             self.pic_count_label.setText(text)
