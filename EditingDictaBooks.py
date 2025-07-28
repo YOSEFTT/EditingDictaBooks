@@ -2670,7 +2670,7 @@ class TextCleanerApp(QWidget):
                 msg = QMessageBox(self)
                 msg.setWindowTitle("!שים לב")
                 msg.setText("אין מה להחליף בקובץ זה")
-                QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
+                QTimer.singleShot(1500, msg.close)  # סוגר את ההודעה לאחר 1500 מילי־שניות (1.5 שניות)
                 msg.show()
                 return
             else:
