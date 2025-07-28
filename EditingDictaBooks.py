@@ -670,7 +670,7 @@ class AddPageNumberToHeading(QWidget):
 
                         updated_content.append(new_title)
 
-                        modified_next_line = re.sub(pattern, '', next_line).strip()
+                        modified_next_line = re.sub(pattern, '', next_line, count=1).strip()
                         if modified_next_line != '':
                             updated_content.append(modified_next_line + '\n')
 
