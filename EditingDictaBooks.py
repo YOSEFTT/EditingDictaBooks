@@ -174,7 +174,6 @@ class CreateHeadersOtZria(QWidget):
     def show_custom_message(self, title, message_parts, window_size=("560x330")):
         msg = QMessageBox(self)
         msg.setWindowTitle(title)
-        msg.setIcon(QMessageBox.Information)
 
         # בניית ההודעה עם גודל גופן שונה
         full_message = ""
