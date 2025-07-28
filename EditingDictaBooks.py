@@ -2656,7 +2656,7 @@ class TextCleanerApp(QWidget):
             if self.checkBoxes["remove_spaces_before"].isChecked():
                 text = re.sub(r'[ \t]+([\)\],.:])', r'\1', text)
             if self.checkBoxes["remove_spaces_after"].isChecked():
-                text = re.sub(r'(?<=\s|^)([\[\(])\s+', r'\1', text, flags=re.MULTILINE)
+                text = re.sub(r'(\s|^)([\[\(])(\s+)', r'\1\2', text, flags=re.MULTILINE)
             if self.checkBoxes["remove_spaces_around_newlines"].isChecked():
                 text = re.sub(r'\s*\n\s*', '\n', text)
             if self.checkBoxes["replace_double_quotes"].isChecked():
