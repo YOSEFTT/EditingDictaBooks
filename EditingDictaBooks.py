@@ -648,7 +648,7 @@ class AddPageNumberToHeading(QWidget):
         changes_made = False
         updated_content = []
         i = 0
-        
+
         while i < len(content):
             line = content[i]
             match = re.match(r'<h([2-9])>(דף \S+)</h\1>', line)
@@ -902,6 +902,13 @@ class EmphasizeAndPunctuate(QWidget):
         self.emphasize_var = QCheckBox("הדגש את תחילת הקטעים")
         self.emphasize_var.setStyleSheet("font-size: 20px;")
         layout.addWidget(self.emphasize_var)
+
+        # כאן להוסיף לבל של הסבר שזה עובד רק אם יש מעל עשר מילים בשורה
+        self.word_count_label = QLabel("התוכנה פועלת רק על שורות שיש בהם עשר מילים ומעלה")
+        self.word_count_label.setStyleSheet("font-size: 20px; font-weight: bold;")
+        self.word_count_label.setWordWrap(True)
+        self.word_count_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.word_count_label)
 
         # כפתור הפעלה
         run_button = QPushButton("הפעל")
