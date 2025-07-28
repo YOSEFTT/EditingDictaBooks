@@ -439,6 +439,13 @@ class CreateSingleLetterHeaders(QWidget):
         end_layout.addWidget(self.end_var)
         layout.addLayout(end_layout)
 
+        # כאן להוסיף לבל של הסבר שכדאי לגבות את הקובץ לפני הפעלת תוכנה זו
+        self.word_count_label = QLabel("מומלץ מאוד ליצור גיבוי של הספר לפני הפעלת תוכנה זו!!\n")
+        self.word_count_label.setStyleSheet("font-size: 20px; font-weight: bold;")
+        self.word_count_label.setWordWrap(True)
+        self.word_count_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.word_count_label)
+
         # כפתור הפעלה
         run_button = QPushButton("הפעל")
         run_button.clicked.connect(self.run_script)
