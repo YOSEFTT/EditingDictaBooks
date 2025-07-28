@@ -645,10 +645,10 @@ class AddPageNumberToHeading(QWidget):
             QMessageBox.critical(self, "קלט לא תקין", f"שגיאה בפתיחת קובץ: {e}")
             return
 
-        updated_content = []
         changes_made = False
-
+        updated_content = []
         i = 0
+        
         while i < len(content):
             line = content[i]
             match = re.match(r'<h([2-9])>(דף \S+)</h\1>', line)
