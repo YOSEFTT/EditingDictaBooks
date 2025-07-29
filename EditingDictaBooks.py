@@ -261,20 +261,20 @@ class CreateHeadersOtZria(QWidget):
         try:
             found, count_headings = self.main(book_file, finde, end + 1, level_num)
 
-            # אם נבחרה המילה "דף" והיו שינויים, הפעל את סקריפט 3
+            # אם נבחרה המילה "דף" והיו שינויים, הפעל את סקריפט 3 אוטומטית
             if finde == "דף" and found and count_headings > 0:
                 add_page_number = AddPageNumberToHeading()
-                add_page_number.set_file_path(self.file_path)
-                add_page_number.process_file(self.file_path, "נקודה ונקודותיים")
+                add_page_number.process_file(book_file, "נקודה ונקודותיים")
 
                 detailed_message = [
                     ("<div style='text-align: center;'>התוכנה רצה בהצלחה!</div>", 12),
                     (f"<div style='text-align: center;'>נוצרו {count_headings} כותרות</div>", 15, "bold"),
+                    ("<div style='text-align: center;'>בנוסף, הוכנס מספרי העמודים לכותרות הדף כנקודה ונקודותיים</div>", 11, "bold"),
                     ("<div style='text-align: center;'>כעת פתח את הספר בתוכנת 'אוצריא', והשינויים ישתקפו ב'ניווט' שבתפריט הצידי.</div>", 11),
                     ("<div style='text-align: center;'>אם ישנם טעויות או תיקונים, פתח את הספר בעורך טקסט, כגון פנקס רשימות, וורד,<br>++notepad או vs code, ותקן את הדרוש תיקון</div>", 11),
                     ("<div style='text-align: center;'>שים לב! אם הספר כבר פתוח ב'אוצריא', יש לסגור אותו ולפתוח אותו שוב, אך אין צורך להפעיל את התוכנה מחדש</div>", 9),
                 ]
-                self.show_custom_message("!מזל טוב", detailed_message, "560x310")                
+                self.show_custom_message("!מזל טוב", detailed_message, "560x330")                
 
             elif found and count_headings > 0:
                 detailed_message = [
