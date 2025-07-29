@@ -923,6 +923,7 @@ class EmphasizeAndPunctuate(QWidget):
         # הדגשת תחילת קטע
         self.emphasize_var = QCheckBox("הדגש את תחילת הקטעים")
         self.emphasize_var.setStyleSheet("font-size: 20px;")
+        self.emphasize_var.setChecked(True)
         layout.addWidget(self.emphasize_var)
 
         # כאן להוסיף לבל של הסבר שזה עובד רק אם יש מעל עשר מילים בשורה
