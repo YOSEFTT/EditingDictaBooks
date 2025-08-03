@@ -215,10 +215,13 @@ class CreateHeadersOtZria(QWidget):
         with open(book_file, "r", encoding="utf-8") as file_input:
             content = file_input.read().splitlines()
             all_lines = content[0:2]
-            for line in content[2:]:
+            i = 2
+            while i < len(content):
+                line = content[i]
                 words = line.split()
                 try:
-                    if self.strip_html_tags(words[0]) == finde and self.ot(words[1], end):
+                    # בדיקה רגילה - המילה המוגדרת ומספר גימטריה באותה שורה
+                    if len(words) >= 2 and self.strip_html_tags(words[0]) == finde and self.ot(words[1], end):
                         found = True
                         count_headings += 1
                         heading_line = f"<h{level_num}>{self.strip_html_tags(words[0])} {self.strip_html_tags(words[1])}</h{level_num}>"
@@ -226,10 +229,27 @@ class CreateHeadersOtZria(QWidget):
                         if words[2:]:
                             fix_2 = " ".join(words[2:])
                             all_lines.append(fix_2)
+                    # בדיקה חדשה - המילה המוגדרת לבדה בשורה, ומספר גימטריה בשורה הבאה
+                    elif (len(words) == 1 and self.strip_html_tags(words[0]) == finde and 
+                          i + 1 < len(content)):
+                        next_line = content[i + 1]
+                        next_words = next_line.split()
+                        if (len(next_words) >= 1 and self.ot(next_words[0], end)):
+                            found = True
+                            count_headings += 1
+                            heading_line = f"<h{level_num}>{self.strip_html_tags(words[0])} {self.strip_html_tags(next_words[0])}</h{level_num}>"
+                            all_lines.append(heading_line)
+                            if next_words[1:]:
+                                fix_2 = " ".join(next_words[1:])
+                                all_lines.append(fix_2)
+                            i += 1  # דלג על השורה הבאה כי כבר עיבדנו אותה
+                        else:
+                            all_lines.append(line)
                     else:
                         all_lines.append(line)
                 except IndexError:
                     all_lines.append(line)
+                i += 1
         join_lines = "\n".join(all_lines)
         with open(book_file, "w", encoding="utf-8") as autpoot:
             autpoot.write(join_lines)
@@ -512,7 +532,7 @@ class CreateSingleLetterHeaders(QWidget):
 
     def ot(self, text, end):
         remove = ["<b>", "</b>", "<big>", "</big>", "<i>", "</i>", "</small>", "</small>", "<span>", "</span>", "<br>", "</br>", "<p>", "</p>", ":", '"', ",", ";", "[", "]", "(", ")", "{", "}", "'", ".", "״", "”", "’"]
-        aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יו", "קיה", "קיו"]
+        aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יה", "יו", "קיה", "קיו", "ריה", "ריו", "שיה", "שיו", "תיה", "תיו", "תקיה", "תקיו", "תריה", "תריו", "תשיה", "תשיו", "תתיה", "תתיו", "תתקיה", "תתקיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
         cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "חי", "יוד", "למד", "נון", "טל", "דש", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערה", "ערב", "עדר", "רחצ"]
         append_list = []
