@@ -608,6 +608,14 @@ class AddPageNumberToHeading(QWidget):
         explanation.setWordWrap(True)
         layout.addWidget(explanation)
 
+        # הוספת הסבר שהמחלקה רצה אוטומטית בהרצת המחלקה הראשית
+        explanation2 =  QLabel(
+            "שים לב, התוכנה כבר רצה באופן אוטומטי, בהרצת התוכנה הראשית על המילה 'דף'")
+        explanation2.setStyleSheet("font-size: 16px; font-weight: bold;")
+        explanation2.setAlignment(Qt.AlignCenter)
+        explanation2.setWordWrap(True)
+        layout.addWidget(explanation2)
+
         # נתיב קובץ
         file_layout = QHBoxLayout()
         file_label = QLabel("נתיב קובץ:")
