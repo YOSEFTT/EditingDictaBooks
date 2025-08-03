@@ -50,7 +50,7 @@ from urllib3.util.ssl_ import create_urllib3_context
 from bidi.algorithm import get_display
 
 # גרסת התוכנה - משתנה גלובלי מרכזי
-VERSION = "3.6.0"
+VERSION = "3.7.0"
 
 # מזהה ייחודי לאפליקציה
 myappid = 'MIT.LEARN_PYQT.dictatootzaria'
