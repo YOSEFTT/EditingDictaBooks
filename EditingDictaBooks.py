@@ -264,7 +264,7 @@ class CreateHeadersOtZria(QWidget):
             # אם נבחרה המילה "דף" והיו שינויים, הפעל את סקריפט 3 אוטומטית
             if finde == "דף" and found and count_headings > 0:
                 add_page_number = AddPageNumberToHeading()
-                add_page_number.process_file(book_file, "נקודה ונקודותיים")
+                add_page_number.process_file(book_file, "נקודה ונקודותיים", show_message=False)
 
                 detailed_message = [
                     ("<div style='text-align: center;'>התוכנה רצה בהצלחה!</div>", 12),
@@ -653,18 +653,21 @@ class AddPageNumberToHeading(QWidget):
             self.file_entry.setText(file_path)
             self.sender().setText("קובץ נבחר, המשך לבחירת סוג ההחלפה")
 
-    def process_file(self, filename, replace_with):
+    def process_file(self, filename, replace_with, show_message=True):
         try:
             with open(filename, 'r', encoding='utf-8') as file:
                 content = file.readlines()
         except FileNotFoundError:
-            QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
+            if show_message:
+                QMessageBox.critical(self, "קלט לא תקין", "הקובץ לא נמצא")
             return
         except UnicodeDecodeError:
-            QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
+            if show_message:
+                QMessageBox.critical(self, "קלט לא תקין", "קידוד הקובץ אינו נתמך. יש להשתמש בקידוד UTF-8.")
             return
         except Exception as e:
-            QMessageBox.critical(self, "קלט לא תקין", f"שגיאה בפתיחת קובץ: {e}")
+            if show_message:
+                QMessageBox.critical(self, "קלט לא תקין", f"שגיאה בפתיחת קובץ: {e}")
             return
 
         changes_made = False
@@ -714,13 +717,15 @@ class AddPageNumberToHeading(QWidget):
         if changes_made:
             with open(filename, 'w', encoding='utf-8') as file:
                 file.writelines(updated_content)
-            QMessageBox.information(self, "!מזל טוב", "ההחלפה הושלמה בהצלחה!")
+            if show_message:
+                QMessageBox.information(self, "!מזל טוב", "ההחלפה הושלמה בהצלחה!")
         else:
-            msg = QMessageBox(self)
-            msg.setWindowTitle("!שים לב")
-            msg.setText("אין מה להחליף בקובץ זה")
-            QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
-            msg.show()
+            if show_message:
+                msg = QMessageBox(self)
+                msg.setWindowTitle("!שים לב")
+                msg.setText("אין מה להחליף בקובץ זה")
+                QTimer.singleShot(2500, msg.close)  # סוגר את ההודעה לאחר 2500 מילי־שניות (2.5 שניות)
+                msg.show()
             return
 
     def run_script(self):
@@ -1904,7 +1909,7 @@ class CheckHeadingErrorsOriginal(QWidget):
             return
 
         # בדיקה עבור המחרוזת "ציור בספר"
-        patterns = ["ציור בספר", "$$ ציור $$", "$$ציור$$", "$$ ציור", "ציור $$", "ציור$$", "$$ציור"]
+        patterns = ["ציור בספר", "$$ ציור $$", "$$ציור$$", "$ציור$", "$$ ציור", "ציור $$", "ציור$$", "$$ציור"]
         total_count = sum(content.count(pattern) for pattern in patterns)
         if total_count > 0:
             text = (f'שים לב! יש בספר {total_count} ציורים.\n'
@@ -2310,7 +2315,7 @@ class CheckHeadingErrorsCustom(QWidget):
             return
 
         # בדיקה עבור המחרוזת "ציור בספר"
-        patterns = ["ציור בספר", "$$ ציור $$", "$$ציור$$", "$$ ציור", "ציור $$", "ציור$$", "$$ציור"]
+        patterns = ["ציור בספר", "$$ ציור $$", "$$ציור$$", "$ציור$", "$$ ציור", "ציור $$", "ציור$$", "$$ציור"]
         total_count = sum(content.count(pattern) for pattern in patterns)
         if total_count > 0:
             text = (f'שים לב! יש בספר {total_count} ציורים.\n'
