@@ -4107,7 +4107,7 @@ class AboutDialog(QDialog):
         version_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(version_label)
 
-        date_label = QLabel("תאריך: י סיון תשפה")
+        date_label = QLabel("תאריך: י אב תשפה")
         date_label.setStyleSheet("font-size: 10pt;")
         date_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(date_label)
