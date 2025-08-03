@@ -199,7 +199,7 @@ class CreateHeadersOtZria(QWidget):
 
         for tage in remove:
             text = text.replace(tage, "")
-        withaute_gershayim = [gematria._num_to_str(i, thousands=False, withgershayim=False) for i in range(1, end)] + bb + cc + append_list
+        withaute_gershayim = [gematria._num_to_str(i, thousands=False, withgershayim=False) for i in range(1, end)] + bb + cc + append_list + aa
         return text in withaute_gershayim
 
     def strip_html_tags(self, text):
@@ -221,7 +221,7 @@ class CreateHeadersOtZria(QWidget):
                 words = line.split()
                 try:
                     # בדיקה רגילה - המילה המוגדרת ומספר גימטריה באותה שורה
-                    if len(words) >= 2 and self.strip_html_tags(words[0]) == finde and self.ot(words[1], end):
+                    if len(words) >= 2 and self.strip_html_tags(words[0]) == finde_cleaned and self.ot(self.strip_html_tags(words[1]), end):
                         found = True
                         count_headings += 1
                         heading_line = f"<h{level_num}>{self.strip_html_tags(words[0])} {self.strip_html_tags(words[1])}</h{level_num}>"
@@ -230,11 +230,11 @@ class CreateHeadersOtZria(QWidget):
                             fix_2 = " ".join(words[2:])
                             all_lines.append(fix_2)
                     # בדיקה חדשה - המילה המוגדרת לבדה בשורה, ומספר גימטריה בשורה הבאה
-                    elif (len(words) == 1 and self.strip_html_tags(words[0]) == finde and 
+                    elif (len(words) == 1 and self.strip_html_tags(words[0]) == finde_cleaned and 
                           i + 1 < len(content)):
                         next_line = content[i + 1]
                         next_words = next_line.split()
-                        if (len(next_words) >= 1 and self.ot(next_words[0], end)):
+                        if (len(next_words) >= 1 and self.ot(self.strip_html_tags(next_words[0]), end)):
                             found = True
                             count_headings += 1
                             heading_line = f"<h{level_num}>{self.strip_html_tags(words[0])} {self.strip_html_tags(next_words[0])}</h{level_num}>"
@@ -542,7 +542,7 @@ class CreateSingleLetterHeaders(QWidget):
 
         for tage in remove:
             text = text.replace(tage, "")
-        withaute_gershayim = [gematria._num_to_str(i, thousands=False, withgershayim=False) for i in range(1, end)] + bb + cc + append_list
+        withaute_gershayim = [gematria._num_to_str(i, thousands=False, withgershayim=False) for i in range(1, end)] + bb + cc + append_list + aa
         return text in withaute_gershayim
 
     def strip_html_tags(self, text, ignore=None):
