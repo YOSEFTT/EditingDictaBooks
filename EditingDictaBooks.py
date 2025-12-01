@@ -50,7 +50,7 @@ from urllib3.util.ssl_ import create_urllib3_context
 from bidi.algorithm import get_display
 
 # גרסת התוכנה - משתנה גלובלי מרכזי
-VERSION = "3.7.0"
+VERSION = "3.7.1"
 
 # מזהה ייחודי לאפליקציה
 myappid = 'MIT.LEARN_PYQT.dictatootzaria'
@@ -2718,9 +2718,9 @@ class TextCleanerApp(QWidget):
             if self.checkBoxes["remove_spaces_around_newlines"].isChecked():
                 text = re.sub(r'\s*\n\s*', '\n', text)
             if self.checkBoxes["replace_double_quotes"].isChecked():
-                text = text.replace("''", '"').replace("``", '"').replace("’’", '"')
+                text = text.replace("''", '"').replace("``", '"').replace("’’", '"').replace("׳׳", '"').replace("‘‘", '"')
             if self.checkBoxes["normalize_quotes"].isChecked():
-                text = text.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'").replace("„", '"')
+                text = text.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'").replace("„", '"').replace("׳", "'").replace("`", "'")
             
             text = text.rstrip()  # מחיקת שורה אחרונה אם היא ריקה
 

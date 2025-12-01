@@ -2,10 +2,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "עריכת ספרי דיקטה"
-#define MyAppVersion "3.7.0"
-#define MyAppPublisher "'מתנדבי אוצריא'"
+#define MyAppVersion "3.7.1"
+#define MyAppPublisher "מתנדבי אוצריא"
 #define MyAppURL "https://github.com/YOSEFTT/EditingDictaBooks/releases"
-#define MyAppExeName "עריכת ספרי דיקטה גירסא 3.7.exe"
+#define MyAppExeName "עריכת ספרי דיקטה גירסא 3.7.1.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -32,7 +32,7 @@ DisableProgramGroupPage=yes
 ; Remove the following line to run in administrative install mode (install for all users).
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputBaseFilename=עריכת ספרי דיקטה
+OutputBaseFilename=עריכת ספרי דיקטה תוכנת התקנה
 SetupIconFile=C:\ATI\edit otzaria.ico
 SolidCompression=yes
 WizardStyle=modern
