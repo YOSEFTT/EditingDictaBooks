@@ -188,7 +188,7 @@ class CreateHeadersOtZria(QWidget):
         msg.exec_()
 
     def ot(self, text, end):
-        remove = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’"]
+        remove = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", ".", "״", "‚", "”", "’", "׳", "‘", "„", "`", "“"]
         aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יה", "יו", "קיה", "קיו", "ריה", "ריו", "שיה", "שיו", "תיה", "תיו", "תקיה", "תקיו", "תריה", "תריו", "תשיה", "תשיו", "תתיה", "תתיו", "תתקיה", "תתקיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
         cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "יוד", "למד", "נון", "דש", "חי", "טל", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערב", "ערה", "עדר", "רחצ"]
@@ -203,7 +203,7 @@ class CreateHeadersOtZria(QWidget):
         return text in withaute_gershayim
 
     def strip_html_tags(self, text):
-        html_tags = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", "״", ".", "‚", "”", "’"]
+        html_tags = ["<b>", "</b>", "<big>", "</big>", ":", '"', ",", ";", "[", "]", "(", ")", "'", "״", ".", "‚", "”", "’", "׳", "‘", "„", "`", "“"]
         for tag in html_tags:
             text = text.replace(tag, "")
         return text
@@ -531,7 +531,7 @@ class CreateSingleLetterHeaders(QWidget):
             QMessageBox.critical(self, "שגיאה", f"אירעה שגיאה: {e}")
 
     def ot(self, text, end):
-        remove = ["<b>", "</b>", "<big>", "</big>", "<i>", "</i>", "</small>", "</small>", "<span>", "</span>", "<br>", "</br>", "<p>", "</p>", ":", '"', ",", ";", "[", "]", "(", ")", "{", "}", "'", ".", "״", "”", "’"]
+        remove = ["<b>", "</b>", "<big>", "</big>", "<i>", "</i>", "</small>", "</small>", "<span>", "</span>", "<br>", "</br>", "<p>", "</p>", ":", '"', ",", ";", "[", "]", "(", ")", "{", "}", "'", ".", "״", "”", "’", "׳", "‘", "„", "`", "“"]
         aa = ["ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק", "יה", "יו", "קיה", "קיו", "ריה", "ריו", "שיה", "שיו", "תיה", "תיו", "תקיה", "תקיו", "תריה", "תריו", "תשיה", "תשיו", "תתיה", "תתיו", "תתקיה", "תתקיו"]
         bb = ["ם", "ן", "ץ", "ף", "ך"]
         cc = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "ששי", "שביעי", "שמיני", "תשיעי", "עשירי", "חי", "יוד", "למד", "נון", "טל", "דש", "שדמ", "ער", "שדם", "תשדם", "תשדמ", "ערה", "ערב", "עדר", "רחצ"]
@@ -712,7 +712,7 @@ class AddPageNumberToHeading(QWidget):
                 if next_line_index < len(content):
                     next_line = content[next_line_index].strip()
 
-                    pattern = r'(<[a-z]+>)?(ע["\']+?[א-ב]|עמוד [א-ב])[.,:()\[\]\'"״׳]?(</[a-z]+>)?\s?'
+                    pattern = r'(<[a-z]+>)?(ע["\']+?[א-ב]|עמוד [א-ב])[.,:()\[\]\'"״׳”’‘„`“]?(</[a-z]+>)?\s?'
                     match_next_line = re.match(pattern, next_line)
 
                     if match_next_line:
@@ -2720,7 +2720,7 @@ class TextCleanerApp(QWidget):
             if self.checkBoxes["replace_double_quotes"].isChecked():
                 text = text.replace("''", '"').replace("``", '"').replace("’’", '"').replace("׳׳", '"').replace("‘‘", '"')
             if self.checkBoxes["normalize_quotes"].isChecked():
-                text = text.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'").replace("„", '"').replace("׳", "'").replace("`", "'")
+                text = text.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'").replace("„", '"').replace("׳", "'").replace("`", "'").replace("״", '"')
             
             text = text.rstrip()  # מחיקת שורה אחרונה אם היא ריקה
 
