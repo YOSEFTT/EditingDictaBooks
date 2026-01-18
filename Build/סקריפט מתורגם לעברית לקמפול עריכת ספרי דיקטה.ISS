@@ -8,7 +8,7 @@
 #define MyAppName "עריכת ספרי דיקטה"
 
 ; מספר גרסה של האפליקציה
-#define MyAppVersion "3.7.1"
+#define MyAppVersion "3.7.2"
 
 ; שם המוציא לאור שמופיע בהתקנה
 #define MyAppPublisher "מתנדבי אוצריא"

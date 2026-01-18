@@ -2,10 +2,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "עריכת ספרי דיקטה"
-#define MyAppVersion "3.7.1"
+#define MyAppVersion "3.7.2"
 #define MyAppPublisher "מתנדבי אוצריא"
 #define MyAppURL "https://github.com/YOSEFTT/EditingDictaBooks/releases"
-#define MyAppExeName "עריכת ספרי דיקטה גירסא 3.7.1.exe"
+#define MyAppExeName "עריכת ספרי דיקטה גירסא 3.7.2.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
