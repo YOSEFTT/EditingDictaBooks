@@ -2831,7 +2831,7 @@ class SyncWorker(QThread):
             
             # קבלת רשימת קבצים מ-GitHub
             try:
-                response = requests.get(BASE_URL + "DictaToOtzaria/ספרים/לא ערוך/list.txt")
+                response = requests.get(BASE_URL + "DictaToOtzaria/ספרים/לא ערוך/list.txt", verify = False)
                 if response.status_code != 200:
                     self.finished_signal.emit(False, f"שגיאה בקבלת רשימת קבצים מגיטהאב: {response.status_code}")
                     return
@@ -2860,7 +2860,7 @@ class SyncWorker(QThread):
                 
                 # הורדת הקובץ
                 try:
-                    response = requests.get(BASE_URL + f"DictaToOtzaria/ספרים/לא ערוך/אוצריא/{file}")
+                    response = requests.get(BASE_URL + f"DictaToOtzaria/ספרים/לא ערוך/אוצריא/{file}", verify = False)
                     if response.status_code != 200:
                         self.update_progress.emit(f"שגיאה בהורדת הקובץ: {file}")
                         continue
@@ -2934,7 +2934,7 @@ class CompareWorker(QThread):
             
             # קבלת רשימת קבצים מ-GitHub
             try:
-                response = requests.get(BASE_URL + "DictaToOtzaria/ספרים/לא ערוך/list.txt")
+                response = requests.get(BASE_URL + "DictaToOtzaria/ספרים/לא ערוך/list.txt", verify = False)
                 if response.status_code != 200:
                     self.update_progress.emit(f"שגיאה בקבלת רשימת קבצים מגיטהאב: {response.status_code}")
                     return
@@ -4409,3 +4409,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
